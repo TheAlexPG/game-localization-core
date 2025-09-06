@@ -2,17 +2,21 @@ import os
 import re
 import time
 import json
-import requests
 from pathlib import Path
 from typing import List, Dict, Tuple
+from openai import OpenAI
+from dotenv import load_dotenv
+load_dotenv()
 
 # ===== НАЛАШТУВАННЯ =====
 SOURCE_DIR = "./SILKSONG_EN/._Decrypted"  # Папка з оригінальними файлами
 OUTPUT_DIR = "./SILKSONG_UA"  # Папка для перекладених файлів
-BATCH_SIZE = 5  # Кількість рядків для перекладу за раз (менше для кращої якості)
-API_URL = "http://localhost:1234/v1/chat/completions"
-MODEL_NAME = "openai-gpt-oss-20b-temp"
-TEMPERATURE = 0.3  # Низька для консистентності перекладу
+BATCH_SIZE = 5  # Кількість рядків для перекладу за раз
+
+# OpenAI налаштування
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+MODEL_NAME = "gpt-5"  # або "gpt-3.5-turbo" для дешевшого варіанту
+TEMPERATURE = 1  # Низька для консистентності перекладу
 MAX_RETRIES = 3
 RETRY_DELAY = 2
 
@@ -43,10 +47,11 @@ GLOSSARY = {
 }
 
 
-class SilksongLMStudioTranslator:
+class SilksongOpenAITranslator:
     def __init__(self):
+        self.client = OpenAI(api_key=OPENAI_API_KEY)
         self.translation_cache = {}
-        self.stats = {"translated": 0, "cached": 0, "errors": 0}
+        self.stats = {"translated": 0, "cached": 0, "errors": 0, "tokens_used": 0}
         self.load_cache()
 
     def create_prompt(self, text: str) -> str:
@@ -76,51 +81,50 @@ class SilksongLMStudioTranslator:
 
         return prompt
 
-    def call_lm_studio(self, text: str) -> str:
-        """Викликає LM Studio API для перекладу"""
+    def call_openai(self, text: str) -> str:
+        """Викликає OpenAI API для перекладу"""
         for attempt in range(MAX_RETRIES):
             try:
-                response = requests.post(
-                    API_URL,
-                    json={
-                        "model": MODEL_NAME,
-                        "messages": [
-                            {
-                                "role": "system",
-                                "content": "You are a professional Ukrainian game translator. Translate accurately while preserving the dark fantasy atmosphere."
-                            },
-                            {
-                                "role": "user",
-                                "content": self.create_prompt(text)
-                            }
-                        ],
-                        "temperature": TEMPERATURE,
-                        "max_tokens": 500,
-                        "stream": False
-                    },
-                    timeout=30
+                response = self.client.chat.completions.create(
+                    model=MODEL_NAME,
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": "You are a professional Ukrainian game translator specializing in dark fantasy games. Translate accurately while preserving the atmospheric style and all formatting/tags."
+                        },
+                        {
+                            "role": "user",
+                            "content": self.create_prompt(text)
+                        }
+                    ],
+                    temperature=TEMPERATURE,
+                    max_completion_tokens=30000
                 )
 
-                if response.status_code == 200:
-                    result = response.json()
-                    translation = result['choices'][0]['message']['content'].strip()
+                translation = response.choices[0].message.content.strip()
 
-                    # Очищаємо відповідь від можливих пояснень
-                    if ":" in translation[:50]:  # Якщо є заголовок типу "Translation:"
-                        translation = translation.split(":", 1)[1].strip()
+                # Оновлюємо статистику токенів
+                if hasattr(response, 'usage'):
+                    self.stats["tokens_used"] += response.usage.total_tokens
 
-                    return translation
-                else:
-                    print(f"Error {response.status_code}: {response.text}")
+                # Очищаємо відповідь від можливих пояснень
+                if ":" in translation[:50]:  # Якщо є заголовок типу "Translation:"
+                    translation = translation.split(":", 1)[1].strip()
 
-            except requests.exceptions.RequestException as e:
-                print(f"Connection error (attempt {attempt + 1}/{MAX_RETRIES}): {e}")
+                return translation
 
             except Exception as e:
-                print(f"Unexpected error: {e}")
+                print(f"  API error (attempt {attempt + 1}/{MAX_RETRIES}): {e}")
 
-            if attempt < MAX_RETRIES - 1:
-                time.sleep(RETRY_DELAY)
+                if "rate_limit" in str(e).lower():
+                    print(f"  Rate limit hit, waiting {RETRY_DELAY * 2} seconds...")
+                    time.sleep(RETRY_DELAY * 2)
+                elif "api_key" in str(e).lower():
+                    print("❌ Invalid API key! Please check your OpenAI API key.")
+                    exit(1)
+
+                if attempt < MAX_RETRIES - 1:
+                    time.sleep(RETRY_DELAY)
 
         self.stats["errors"] += 1
         return f"[TRANSLATION ERROR] {text}"
@@ -138,14 +142,14 @@ class SilksongLMStudioTranslator:
 
         # Перекладаємо
         print(f"  Translating: {text[:50]}...")
-        translation = self.call_lm_studio(text)
+        translation = self.call_openai(text)
 
         # Зберігаємо в кеш
         self.translation_cache[text] = translation
         self.stats["translated"] += 1
 
-        # Невелика затримка щоб не перевантажити модель
-        time.sleep(0.5)
+        # Невелика затримка щоб не перевантажити API
+        time.sleep(0.2)
 
         return translation
 
@@ -217,22 +221,21 @@ class SilksongLMStudioTranslator:
         files = list(source_path.glob("EN_*.txt")) + list(source_path.glob("EN_*.xml"))
 
         if not files:
-            print("❌ No files found! Make sure SILKSONG_EN folder contains decrypted files")
+            print("❌ No files found! Make sure SILKSONG_EN/._Decrypted folder contains decrypted files")
             return
 
         print(f"🎮 SILKSONG UKRAINIAN TRANSLATION")
         print(f"📁 Found {len(files)} files to translate")
         print(f"🤖 Using model: {MODEL_NAME}")
-        print(f"🌐 API: {API_URL}\n")
+        print(f"🔑 API: OpenAI\n")
 
-        # Перевіряємо з'єднання з LM Studio
-        try:
-            test_response = requests.get("http://localhost:1234/v1/models", timeout=5)
-            if test_response.status_code != 200:
-                print("❌ Cannot connect to LM Studio! Make sure it's running on port 1234")
-                return
-        except:
-            print("❌ LM Studio is not running! Start it first and load the model")
+        # Оцінка вартості
+        estimated_cost = self.estimate_cost(files)
+        print(f"💰 Estimated cost: ${estimated_cost:.2f} (approximate)")
+
+        response = input("\n⚠️  Continue with translation? (yes/no): ")
+        if response.lower() not in ['yes', 'y']:
+            print("Translation cancelled.")
             return
 
         # Обробляємо файли
@@ -253,8 +256,37 @@ class SilksongLMStudioTranslator:
         print(f"  - Translated: {self.stats['translated']} strings")
         print(f"  - From cache: {self.stats['cached']} strings")
         print(f"  - Errors: {self.stats['errors']} strings")
+        print(f"  - Tokens used: {self.stats['tokens_used']:,}")
+
+        # Розрахунок вартості
+        if MODEL_NAME == "gpt-4-turbo-preview":
+            cost = (self.stats['tokens_used'] / 1000) * 0.01  # $0.01 per 1K tokens (approximate)
+        else:  # gpt-3.5-turbo
+            cost = (self.stats['tokens_used'] / 1000) * 0.0015  # $0.0015 per 1K tokens
+
+        print(f"💵 Approximate cost: ${cost:.2f}")
         print(f"📁 Output folder: {OUTPUT_DIR}")
         print(f"💾 Cache saved to: translation_cache.json")
+
+    def estimate_cost(self, files):
+        """Оцінює приблизну вартість перекладу"""
+        total_chars = 0
+        for file_path in files[:3]:  # Беремо перші 3 файли для оцінки
+            entries = self.extract_entries(str(file_path))
+            for _, text in entries:
+                total_chars += len(text)
+
+        # Екстраполюємо на всі файли
+        avg_per_file = total_chars / min(3, len(files))
+        total_estimated = avg_per_file * len(files)
+
+        # Приблизно 4 символи = 1 токен
+        estimated_tokens = (total_estimated / 4) * 2  # x2 для запиту і відповіді
+
+        if MODEL_NAME == "gpt-4-turbo-preview":
+            return (estimated_tokens / 1000) * 0.01
+        else:
+            return (estimated_tokens / 1000) * 0.0015
 
     def save_cache(self):
         """Зберігає кеш перекладів"""
@@ -272,32 +304,22 @@ class SilksongLMStudioTranslator:
 
 
 def test_connection():
-    """Тестує з'єднання з LM Studio"""
-    print("🔍 Testing LM Studio connection...")
+    """Тестує з'єднання з OpenAI API"""
+    print("🔍 Testing OpenAI API connection...")
 
     try:
-        response = requests.post(
-            API_URL,
-            json={
-                "model": MODEL_NAME,
-                "messages": [
-                    {"role": "user", "content": "Translate to Ukrainian: Hello"}
-                ],
-                "temperature": 0.1,
-                "max_tokens": 10,
-                "stream": False
-            },
-            timeout=10
+        client = OpenAI(api_key=OPENAI_API_KEY)
+        response = client.chat.completions.create(
+            model=MODEL_NAME,
+            messages=[
+                {"role": "user", "content": "Say 'Hello' in Ukrainian"}
+            ]
         )
 
-        if response.status_code == 200:
-            result = response.json()
-            print(f"✅ Connection successful!")
-            print(f"   Test response: {result['choices'][0]['message']['content']}")
-            return True
-        else:
-            print(f"❌ Error: {response.status_code}")
-            return False
+        result = response.choices[0].message.content
+        print(f"✅ Connection successful!")
+        print(f"   Test response: {result}")
+        return True
 
     except Exception as e:
         print(f"❌ Connection failed: {e}")
@@ -305,21 +327,27 @@ def test_connection():
 
 
 if __name__ == "__main__":
-    print("🎮 HOLLOW KNIGHT: SILKSONG - Ukrainian Translation Tool")
+    print("🎮 HOLLOW KNIGHT: SILKSONG - Ukrainian Translation Tool (OpenAI)")
     print("=" * 50)
+
+    # Перевірка API ключа
+    if OPENAI_API_KEY == "YOUR_API_KEY_HERE":
+        print("❌ Please set your OpenAI API key in the script!")
+        print("   Edit the OPENAI_API_KEY variable")
+        exit(1)
 
     # Тестуємо з'єднання
     if not test_connection():
-        print("\n⚠️  Please make sure:")
-        print("1. LM Studio is running")
-        print("2. Model 'openai-gpt-oss-20b-temp' is loaded")
-        print("3. Server is running on port 1234")
+        print("\n⚠️  Please check:")
+        print("1. Your OpenAI API key is valid")
+        print("2. You have credits in your OpenAI account")
+        print("3. The model name is correct (gpt-4-turbo-preview or gpt-3.5-turbo)")
         exit(1)
 
     print("\n" + "=" * 50)
 
     # Запускаємо переклад
-    translator = SilksongLMStudioTranslator()
+    translator = SilksongOpenAITranslator()
     translator.process_all_files()
 
     print("\n🎉 Done! Now you can:")
