@@ -7,9 +7,9 @@ from pathlib import Path
 from typing import List, Dict, Tuple
 
 # ===== НАЛАШТУВАННЯ =====
-# <<< ЗМІНЕНО: Вказано RU як вихідну мову
-SOURCE_DIR = "./SILKSONG_RU/._Decrypted"  # Папка з оригінальними файлами (російськими)
-OUTPUT_DIR = "./SILKSONG_UA"  # Папка для перекладених файлів
+SOURCE_DIR = "./SILKSONG_RU/._Decrypted"  # Папка з оригінальними файлами
+OUTPUT_DIR = "../SILKSONG_UA"  # Папка для перекладених файлів
+BATCH_SIZE = 5  # Кількість рядків для перекладу за раз (менше для кращої якості)
 API_URL = "http://localhost:1234/v1/chat/completions"
 MODEL_NAME = "openai-gpt-oss-20b-temp"
 TEMPERATURE = 0.3  # Низька для консистентності перекладу
@@ -19,7 +19,7 @@ RETRY_DELAY = 2
 # Глосарій термінів що не перекладаємо
 PRESERVE_TERMS = [
     "Hornet", "Pharloom", "Silksong", "Citadel",
-    "Garmond", "Lace", "Shakra", "Coral", "Ярнаби"  # Додав ім'я з прикладу
+    "Garmond", "Lace", "Shakra", "Coral"
 ]
 
 # Глосарій для консистентного перекладу
@@ -39,46 +39,41 @@ GLOSSARY = {
     "Mask": "Маска",
     "Charm": "Оберіг",
     "Spool": "Котушка",
-    "Fragment": "Фрагмент",
-    "Up": "Вгору",
-    "No": "Ні",
-    "Yes": "Так",
-    "Down": "Вниз"
+    "Fragment": "Фрагмент"
 }
 
 
 class SilksongLMStudioTranslator:
     def __init__(self):
         self.translation_cache = {}
-        self.stats = {"translated": 0, "cached": 0, "errors": 0, "retried": 0}
+        self.stats = {"translated": 0, "cached": 0, "errors": 0}
         self.load_cache()
 
     def create_prompt(self, text: str) -> str:
-        """ <<< ЗМІНЕНО: Промпт значно посилено для збереження тегів """
+        """Створює промпт для перекладу з урахуванням тегів та форматування"""
         glossary_str = "\n".join([f"- {en}: {ua}" for en, ua in GLOSSARY.items()])
         preserve_str = ", ".join(PRESERVE_TERMS)
 
-        prompt = f"""You are a meticulous game localizer translating "Hollow Knight: Silksong" from Russian to Ukrainian. Your primary goal is to preserve the original game's technical tags and formatting exactly.
+        prompt = f"""You are an expert translator for the dark fantasy game "Hollow Knight: Silksong", translating from English to Ukrainian. Provide ONLY the Ukrainian translation of the text.
 
 ### CRITICAL RULES ###
-1.  **Strict Tag Preservation**: The text contains special tags like `<page>`, `<hpage>`, `&lt;page&gt;`, `&#8220;`, etc. You MUST copy these tags to the output **EXACTLY** as they appear in the original text, without any changes, translations, or reformatting.
-2.  **Translate ONLY the Text**: Translate only the human-readable text between the tags.
-3.  **Atmospheric Style**: Maintain the poetic and dark fantasy style.
-4.  **Glossary & Names**: Strictly use this glossary:
+1.  **Preserve ALL Tags and Formatting:** All special characters, line breaks (\\n), and tags like `<tag>`, `<|token|>` or `{{variable}}` MUST be preserved exactly as they are in the original text. DO NOT translate, change, or remove them.
+2.  **Atmospheric Style:** Maintain the poetic, dark, and sometimes archaic style of the original game.
+3.  **Glossary Adherence:** Strictly use the provided glossary for consistency.
 {glossary_str}
-    And do not translate these names: {preserve_str}.
+4.  **Do Not Translate Names:** The following names must remain in English: {preserve_str}.
 
-### EXAMPLE ###
-- **Original Text**:
-Так-так! Что это у нас тут? Заражение, бз-з-з?&lt;page&gt;Ты хотя бы знаешь, кто я?
-- **Correct Ukrainian Translation**:
-Так-так! Що це в нас тут? Зараження, бз-з-з?&lt;page&gt;Ти хоча б знаєш, хто я?
+### EXAMPLE OF PRESERVING TAGS AND NEWLINES ###
+- **Original Text:**
+"Ah, <|hero_name|>. Your journey is long.\\nUse the {{item_bell}} to call for aid."
+- **Correct Ukrainian Translation:**
+"Ах, <|hero_name|>. Твоя подорож довга.\\nВикористай {{item_bell}}, щоб покликати на допомогу."
 
-### RUSSIAN TEXT TO TRANSLATE ###
+### TEXT TO TRANSLATE ###
 {text}
 
-### UKRAINIAN TRANSLATION ###
-"""
+### UKRAINIAN TRANSLATION ###"""
+
         return prompt
 
     def call_lm_studio(self, text: str) -> str:
@@ -92,7 +87,7 @@ class SilksongLMStudioTranslator:
                         "messages": [
                             {
                                 "role": "system",
-                                "content": "You are a professional Ukrainian game translator. Follow the user's instructions for tag preservation precisely."
+                                "content": "You are a professional Ukrainian game translator. Translate accurately while preserving the dark fantasy atmosphere."
                             },
                             {
                                 "role": "user",
@@ -100,36 +95,29 @@ class SilksongLMStudioTranslator:
                             }
                         ],
                         "temperature": TEMPERATURE,
-                        "max_tokens": 1024,  # Збільшено, щоб уникнути обрізки довгих рядків
+                        "max_tokens": 500,
                         "stream": False
                     },
-                    timeout=45  # Збільшено час очікування
+                    timeout=30
                 )
 
                 if response.status_code == 200:
                     result = response.json()
                     translation = result['choices'][0]['message']['content'].strip()
 
-                    # <<< ЗМІНЕНО: Перевірка на порожню відповідь
-                    if not translation:
-                        print(
-                            f"  ⚠️ Warning: Received empty response. Retrying... (Attempt {attempt + 1}/{MAX_RETRIES})")
-                        self.stats["retried"] += 1
-                        time.sleep(RETRY_DELAY)
-                        continue  # Переходимо до наступної спроби
-
-                    # Очищення відповіді від можливих пояснень
-                    if "### UKRAINIAN TRANSLATION ###" in translation:
-                        translation = translation.split("### UKRAINIAN TRANSLATION ###")[-1].strip()
+                    # Очищаємо відповідь від можливих пояснень
+                    if ":" in translation[:50]:  # Якщо є заголовок типу "Translation:"
+                        translation = translation.split(":", 1)[1].strip()
 
                     return translation
                 else:
-                    print(f"  ❌ Error {response.status_code}: {response.text}")
+                    print(f"Error {response.status_code}: {response.text}")
 
             except requests.exceptions.RequestException as e:
-                print(f"  🔗 Connection error (attempt {attempt + 1}/{MAX_RETRIES}): {e}")
+                print(f"Connection error (attempt {attempt + 1}/{MAX_RETRIES}): {e}")
+
             except Exception as e:
-                print(f"  💥 Unexpected error: {e}")
+                print(f"Unexpected error: {e}")
 
             if attempt < MAX_RETRIES - 1:
                 time.sleep(RETRY_DELAY)
@@ -139,14 +127,9 @@ class SilksongLMStudioTranslator:
 
     def translate_text(self, text: str) -> str:
         """Перекладає текст з кешуванням"""
-        # <<< ЗМІНЕНО: Обробка коротких рядків, які не є технічними
-        if not text or text.startswith('$'):
+        # Пропускаємо технічні рядки
+        if not text or text.startswith('$') or len(text) <= 2:
             return text
-
-        # Пропускаємо рядки, що складаються лише з цифр або спецсимволів, але перекладаємо короткі слова
-        if not re.search(r'[a-zA-Zа-яА-Я]', text) and len(text) < 10:
-            if not any(word in text for word in GLOSSARY.keys()):
-                return text
 
         # Перевіряємо кеш
         if text in self.translation_cache:
@@ -154,24 +137,30 @@ class SilksongLMStudioTranslator:
             return self.translation_cache[text]
 
         # Перекладаємо
-        print(f"  Translating: {text[:60]}...")
+        print(f"  Translating: {text[:50]}...")
         translation = self.call_lm_studio(text)
 
         # Зберігаємо в кеш
         self.translation_cache[text] = translation
         self.stats["translated"] += 1
 
+        # Невелика затримка щоб не перевантажити модель
         time.sleep(0.5)
+
         return translation
 
     def extract_entries(self, file_path: str) -> List[Tuple[str, str]]:
         """Витягує всі entry з файлу"""
+        entries = []
+
         try:
             with open(file_path, 'r', encoding='utf-8') as f:
                 content = f.read()
-            # <<< ЗМІНЕНО: Більш гнучкий патерн для пошуку тегів
-            pattern = r'<entry name="([^"]+)">(.*?)</entry>'
+
+            # Шукаємо entry теги
+            pattern = r'<entry name="([^"]+)">([^<]*)</entry>'
             matches = re.findall(pattern, content, re.DOTALL)
+
             return matches
         except Exception as e:
             print(f"Error reading {file_path}: {e}")
@@ -184,36 +173,39 @@ class SilksongLMStudioTranslator:
         with open(input_path, 'r', encoding='utf-8') as f:
             content = f.read()
 
+        # Витягуємо entries
         entries = self.extract_entries(input_path)
+
         if not entries:
-            print("  No entries found, copying as is.")
+            print("  No entries found, copying as is")
             os.makedirs(os.path.dirname(output_path), exist_ok=True)
             with open(output_path, 'w', encoding='utf-8') as f:
                 f.write(content)
             return
 
-        print(f"  Found {len(entries)} entries.")
+        print(f"  Found {len(entries)} entries")
+
+        # Перекладаємо
         translated_content = content
-
         for i, (name, text) in enumerate(entries):
-            # Використовуємо re.escape для безпечної заміни спеціальних символів у тексті
-            escaped_text = re.escape(text)
-
-            # Створюємо більш точний патерн для заміни, щоб уникнути помилок
-            pattern_to_replace = re.compile(f'(<entry name="{re.escape(name)}">){escaped_text}(</entry>)')
-
-            translated = self.translate_text(text)
-
-            # Виконуємо заміну, зберігаючи оригінальні теги
-            translated_content = pattern_to_replace.sub(f'\\1{translated}\\2', translated_content, count=1)
-
-            if (i + 1) % 10 == 0:
-                print(f"  Progress: {i + 1}/{len(entries)}")
+            if i % 10 == 0 and i > 0:
+                print(f"  Progress: {i}/{len(entries)}")
+                # Зберігаємо кеш кожні 10 записів
                 self.save_cache()
 
+            # Перекладаємо текст
+            translated = self.translate_text(text)
+
+            # Замінюємо в контенті
+            old_entry = f'<entry name="{name}">{text}</entry>'
+            new_entry = f'<entry name="{name}">{translated}</entry>'
+            translated_content = translated_content.replace(old_entry, new_entry)
+
+        # Зберігаємо файл
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         with open(output_path, 'w', encoding='utf-8') as f:
             f.write(translated_content)
+
         print(f"  ✅ Saved to: {output_path}")
 
     def process_all_files(self):
@@ -221,73 +213,116 @@ class SilksongLMStudioTranslator:
         source_path = Path(SOURCE_DIR)
         output_path = Path(OUTPUT_DIR)
 
-        # <<< ЗМІНЕНО: Шукаємо файли, що починаються з RU_
-        files = list(source_path.glob("RU_*.txt")) + list(source_path.glob("RU_*.xml"))
+        # Знаходимо файли
+        files = list(source_path.glob("EN_*.txt")) + list(source_path.glob("EN_*.xml"))
 
         if not files:
-            print("❌ No files found! Make sure SOURCE_DIR contains decrypted files starting with 'RU_'")
+            print("❌ No files found! Make sure SILKSONG_EN folder contains decrypted files")
             return
 
-        print(f"🎮 SILKSONG UKRAINIAN TRANSLATION (from RU)")
-        print(f"📁 Found {len(files)} files to translate.")
+        print(f"🎮 SILKSONG UKRAINIAN TRANSLATION")
+        print(f"📁 Found {len(files)} files to translate")
         print(f"🤖 Using model: {MODEL_NAME}")
         print(f"🌐 API: {API_URL}\n")
 
-        if not test_connection():
+        # Перевіряємо з'єднання з LM Studio
+        try:
+            test_response = requests.get("http://localhost:1234/v1/models", timeout=5)
+            if test_response.status_code != 200:
+                print("❌ Cannot connect to LM Studio! Make sure it's running on port 1234")
+                return
+        except:
+            print("❌ LM Studio is not running! Start it first and load the model")
             return
 
+        # Обробляємо файли
         for i, file_path in enumerate(files, 1):
             print(f"\n[{i}/{len(files)}]", end="")
             relative_path = file_path.relative_to(source_path)
-
-            # <<< ЗМІНЕНО: Замінюємо RU_ на UA_ у назві вихідного файлу
-            output_filename = file_path.name.replace("RU_", "UA_", 1)
-            output_file = output_path / relative_path.with_name(output_filename)
+            output_file = output_path / relative_path
 
             self.process_file(str(file_path), str(output_file))
+
+            # Зберігаємо прогрес
             self.save_cache()
 
+        # Фінальна статистика
         print(f"\n{'=' * 50}")
         print(f"✅ TRANSLATION COMPLETED!")
         print(f"📊 Statistics:")
         print(f"  - Translated: {self.stats['translated']} strings")
         print(f"  - From cache: {self.stats['cached']} strings")
-        print(f"  - Retried (empty): {self.stats['retried']} times")
         print(f"  - Errors: {self.stats['errors']} strings")
         print(f"📁 Output folder: {OUTPUT_DIR}")
         print(f"💾 Cache saved to: translation_cache.json")
 
     def save_cache(self):
+        """Зберігає кеш перекладів"""
         with open("translation_cache.json", 'w', encoding='utf-8') as f:
             json.dump(self.translation_cache, f, ensure_ascii=False, indent=2)
 
     def load_cache(self):
+        """Завантажує кеш перекладів"""
         try:
             with open("translation_cache.json", 'r', encoding='utf-8') as f:
                 self.translation_cache = json.load(f)
-                print(f"📚 Loaded {len(self.translation_cache)} cached translations.")
+                print(f"📚 Loaded {len(self.translation_cache)} cached translations")
         except FileNotFoundError:
-            print("📚 Starting with empty translation cache.")
+            print("📚 Starting with empty translation cache")
 
 
 def test_connection():
     """Тестує з'єднання з LM Studio"""
     print("🔍 Testing LM Studio connection...")
+
     try:
-        response = requests.get("http://localhost:1234/v1/models", timeout=5)
+        response = requests.post(
+            API_URL,
+            json={
+                "model": MODEL_NAME,
+                "messages": [
+                    {"role": "user", "content": "Translate to Ukrainian: Hello"}
+                ],
+                "temperature": 0.1,
+                "max_tokens": 10,
+                "stream": False
+            },
+            timeout=10
+        )
+
         if response.status_code == 200:
-            print("✅ Connection successful!")
+            result = response.json()
+            print(f"✅ Connection successful!")
+            print(f"   Test response: {result['choices'][0]['message']['content']}")
             return True
         else:
-            print("❌ Cannot connect to LM Studio! Make sure it's running on port 1234.")
+            print(f"❌ Error: {response.status_code}")
             return False
-    except requests.exceptions.RequestException:
-        print("❌ LM Studio is not running! Start it first and load the model.")
+
+    except Exception as e:
+        print(f"❌ Connection failed: {e}")
         return False
 
 
 if __name__ == "__main__":
+    print("🎮 HOLLOW KNIGHT: SILKSONG - Ukrainian Translation Tool")
     print("=" * 50)
+
+    # Тестуємо з'єднання
+    if not test_connection():
+        print("\n⚠️  Please make sure:")
+        print("1. LM Studio is running")
+        print("2. Model 'openai-gpt-oss-20b-temp' is loaded")
+        print("3. Server is running on port 1234")
+        exit(1)
+
+    print("\n" + "=" * 50)
+
+    # Запускаємо переклад
     translator = SilksongLMStudioTranslator()
     translator.process_all_files()
-    print("=" * 50)
+
+    print("\n🎉 Done! Now you can:")
+    print("1. Check translations in SILKSONG_UA folder")
+    print("2. Use 'SilksongDecryptor.exe -encrypt SILKSONG_UA' to encrypt back")
+    print("3. Replace original files in the game")

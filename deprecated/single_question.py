@@ -18,7 +18,7 @@ MAX_PARALLEL_FILES = 5  # Кількість файлів що обробляю�
 # OpenAI налаштування
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 MODEL_NAME = "gpt-5"
-from qestion import prompt
+prompt = "ping"
 
 client = OpenAI(api_key=OPENAI_API_KEY)
 

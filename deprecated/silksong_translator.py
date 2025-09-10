@@ -10,8 +10,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # ===== НАЛАШТУВАННЯ =====
-SOURCE_DIR = "./SILKSONG_EN/._Decrypted"  # Папка з оригінальними файлами
-OUTPUT_DIR = "./SILKSONG_UA"  # Папка для перекладених файлів
+SOURCE_DIR = "../SILKSONG_EN/._Decrypted"  # Папка з оригінальними файлами
+OUTPUT_DIR = "../SILKSONG_UA"  # Папка для перекладених файлів
 BATCH_SIZE = 10  # Кількість рядків для перекладу за раз (збільшено для економії)
 
 # OpenAI налаштування
