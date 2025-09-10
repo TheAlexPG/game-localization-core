@@ -228,29 +228,47 @@ class LocalProvider(AIProvider):
         if not terms:
             return {}
         
-        prompt = self._create_glossary_prompt(terms, source_lang, target_lang)
+        # For large glossaries, break into chunks to avoid token limits
+        chunk_size = 100  # Process 100 terms at a time for local models
+        all_translations = {}
         
-        try:
-            # Use JSON schema for better structured output
-            response = self._make_api_call(prompt, use_json_schema=True, schema_type="glossary_translation")
-            # Clean up response in case model adds extra text
-            response = response.strip()
-            if response.startswith('```json'):
-                response = response[7:]
-            if response.endswith('```'):
-                response = response[:-3]
+        for i in range(0, len(terms), chunk_size):
+            chunk = terms[i:i + chunk_size]
+            print(f"Translating chunk {i//chunk_size + 1}/{(len(terms) + chunk_size - 1)//chunk_size} ({len(chunk)} terms)")
             
-            data = json.loads(response)
-            # Handle structured output format {"translations": {...}}
-            if isinstance(data, dict) and "translations" in data:
-                translations = data["translations"]
-            elif isinstance(data, dict):
-                translations = data
-            else:
-                translations = {}
+            prompt = self._create_glossary_prompt(chunk, source_lang, target_lang)
             
-            return translations if isinstance(translations, dict) else {}
-        except (json.JSONDecodeError, Exception) as e:
-            print(f"Glossary translation failed: {e}")
-            # Fallback: return original terms
-            return {term: term for term in terms}
+            try:
+                # Use JSON schema for better structured output
+                response = self._make_api_call(prompt, use_json_schema=True, schema_type="glossary_translation")
+                # Clean up response in case model adds extra text
+                response = response.strip()
+                if response.startswith('```json'):
+                    response = response[7:]
+                if response.endswith('```'):
+                    response = response[:-3]
+                
+                data = json.loads(response)
+                # Handle structured output format {"translations": {...}}
+                if isinstance(data, dict) and "translations" in data:
+                    translations = data["translations"]
+                elif isinstance(data, dict):
+                    translations = data
+                else:
+                    translations = {}
+                
+                if isinstance(translations, dict):
+                    all_translations.update(translations)
+                else:
+                    print(f"Chunk {i//chunk_size + 1}: Invalid response format")
+                    # Fallback: return original terms for this chunk
+                    for term in chunk:
+                        all_translations[term] = term
+                        
+            except (json.JSONDecodeError, Exception) as e:
+                print(f"Chunk {i//chunk_size + 1} translation failed: {e}")
+                # Fallback: return original terms for this chunk
+                for term in chunk:
+                    all_translations[term] = term
+        
+        return all_translations
