@@ -1,0 +1,26 @@
+DE_Fast Travel
+<entries>
+<entry name="STATION_NAME_SHELLWOOD">Панцирний лiс</entry>
+<entry name="STATION_NAME_DOCKS">Глибокi доки</entry>
+<entry name="STATION_NAME_SHADOW">Жовчноводдя</entry>
+<entry name="TUBE_NAME_HANG">Верхнi палати</entry>
+<entry name="TUBE_LIST_TITLE">АРТЕРIО</entry>
+<entry name="TUBE_NAME_SONG">Хоровi палати</entry>
+<entry name="TUBE_NAME_HUB">Термiнус</entry>
+<entry name="STATION_NAME_BONEFOREST_EAST">Далекi поля</entry>
+<entry name="STATION_NAME_WEAVE">Дiм Ткачiв</entry>
+<entry name="MAP_LIST_TITLE">ДЗВIНКИЙ ШЛЯХ</entry>
+<entry name="STATION_NAME_CITADEL">Дзвiнкий вузол</entry>
+<entry name="TUBE_NAME_CITYBELLWAY">Дзвiнкий вузол</entry>
+<entry name="STATION_NAME_BELLTOWN">Дзвiнвiль</entry>
+<entry name="STATION_NAME_BONETOWN">Кiстяна Низина</entry>
+<entry name="PAY_TOLL_MSG">Вставити намистини?</entry>
+<entry name="TUBE_NAME_ENCLAVE">Перший вiвтар</entry>
+<entry name="STATION_NAME_PEAK">Плита</entry>
+<entry name="STATION_NAME_AQUEDUCT">Гнилi стоки</entry>
+<entry name="TUBE_NAME_UNDER">Нижнi цехи</entry>
+<entry name="STATION_NAME_BONE">Кiстяк</entry>
+<entry name="STATION_NAME_CORAL_TOWER">Пiдточенi ступенi</entry>
+<entry name="STATION_NAME_GREYMOOR">Похмура трясовина</entry>
+<entry name="TUBE_NAME_ARBORIUM">Меморiум</entry>
+</entries>

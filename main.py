@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import List, Dict, Tuple
 
 # ===== НАЛАШТУВАННЯ =====
-SOURCE_DIR = "./SILKSONG_EN/._Decrypted"  # Папка з оригінальними файлами
+SOURCE_DIR = "./SILKSONG_RU/._Decrypted"  # Папка з оригінальними файлами
 OUTPUT_DIR = "./SILKSONG_UA"  # Папка для перекладених файлів
 BATCH_SIZE = 5  # Кількість рядків для перекладу за раз (менше для кращої якості)
 API_URL = "http://localhost:1234/v1/chat/completions"

@@ -1,0 +1,12 @@
+RU_Shop
+<entries>
+<entry name="THUNTER_ITEM_BLASTEDLANDS">Випалені Сходи</entry>
+<entry name="THUNTER_ITEM_FIELDLANDS">Польові землі</entry>
+<entry name="THUNTER_ITEM_MUCKLANDS">Жовчні землі</entry>
+<entry name="TITLE_COURIERS_QUESTS">Доставки</entry>
+<entry name="THUNTER_ITEM_PEAKLANDS">Гора Фей</entry>
+<entry name="THUNTER_ITEMS_TITLE">Блошині знахідки</entry>
+<entry name="THUNTER_ITEM_CITADEL">Citadel</entry>
+<entry name="THUNTER_ITEM_MARROWLANDS">Кістяні землі</entry>
+<entry name="THUNTER_ITEM_MIDLANDS">Серединні землі</entry>
+</entries>

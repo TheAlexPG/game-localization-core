@@ -1,0 +1,46 @@
+DE_Lore
+<entries>
+<entry name="MARROW_START_SIGN">Пiлiгрим!&lt;br&gt;Ти надiлений правом ступити на священну основу Pharloom.&lt;br&gt;Скорися перед оболонками тих, хто вiддав своi життя, аби втримати тягар нашого королiвства.</entry>
+<entry name="RED_MEMORY_ROOT2">&lt;hpage&gt;Ви помиляетеся, ледi. Я знала, чого ви вiд мене бажали, i якою була цiна цього. I тепер, пiсля стiлькох вiкiв, я розумiю це ще краще...&lt;hpage&gt;Сила... у розумi, у пiклуваннi, у надiйних лапах. Сила, достатня, аби я змогла вижити i побачити свiт кращий за наш, або ж створити свiт за власним замислом. &lt;hpage&gt;Таким було бажання моеi матерi, моеi наставницi i ваше...&lt;page&gt;...Воiстину так, павучихо... Скiльки ж болю ти мусила перетерпiти, щоб так просто озвучити наше заповiтне бажання...&lt;page&gt;Щоб ти стала тiею... що осягнула наше iстинне бажання i до кiнця пiзнала темряву, що ховаеться пiд нашим домом, я явлю тобi дар...</entry>
+<entry name="CORAL_CRUST_TAB_1">Корали колишуться,&lt;br&gt;Чиста вода тече&lt;br&gt;У нашiй рiцi, що не знае влади часу.</entry>
+<entry name="SILK_HEART_MEMORY_BELLBEAST_03">...Ти тут... Нарештi...</entry>
+<entry name="SILK_HEART_MEMORY_BELLBEAST_04">...Наш Шовк...</entry>
+<entry name="RED_MEMORY_ROOT3">Узри ж перше свiтло. Едине, що захищае нас вiд Порожнечi, з якою наш рiд навiки пов'язаний.&lt;page&gt;Простягни ж лапу, змiцнiле дитя. Вирви його з цього спогаду. Визволи себе вiд нашоi сумноi участi...</entry>
+<entry name="SILK_HEART_MEMORY_BELLBEAST_05">...Наша сила...</entry>
+<entry name="SILK_HEART_MEMORY_BELLBEAST_06">...Наша природа...</entry>
+<entry name="SILK_HEART_MEMORY_LACE_4">...Хто бажае нашого пробудження...</entry>
+<entry name="RED_MEMORY_BEAST">...Не слухай iх, доню... iхнiм тихим речам...&lt;page&gt;...Величнiша, прекраснiша... Ткачка, хранителька, королева... Все це iхнi бажання... не твоi. I тим паче не моi...&lt;page&gt;...Лише спротивившись iм, ти зможеш узрiти iнше... iншу надiю, за межею...&lt;page&gt;...Але чи згадаеш ти цi слова, коли мине стiльки часу... Чи збережеш ти взагалi пам'ять про мене, дитино? Чи зможеш?&lt;page&gt;...Про мене, як про матiр... до того, як я сховалася пiд маскою... як навiки спочила, виконуючи свiй обов'язок...</entry>
+<entry name="RED_MEMORY_WEAVERS">...Яви нам свое мистецтво, дитино...&lt;page&gt;...Яви його в усiй пишнотi, якоi здатнi навчити лише ми...&lt;page&gt;...Доведи, що в тобi бiльше вiд Ткачки, анiж вiд Черва...</entry>
+<entry name="CORAL_CRUST_TAB_2">У витоку вод&lt;br&gt;I в кораловому серцi&lt;br&gt;Наш володар, народжений останнiм правити.</entry>
+<entry name="MEMORY_FIRSTWEAVER_2">...Вона нарекла нас доньками... Божественними створiннями...&lt;br&gt;То була брехня...</entry>
+<entry name="SILK_HEART_MEMORY_BELLBEAST_01">...Дитя... Ткачки... </entry>
+<entry name="SILK_HEART_MEMORY_WARDBOSS_08">...Единий розум... Единий союз...</entry>
+<entry name="SILK_HEART_MEMORY_BELLBEAST_02">...Дитя... Дитя...</entry>
+<entry name="RED_MEMORY_ROOT">...На жаль... павуче дитя...&lt;page&gt;...Нашi шляхи здадуться тобi суворими... Ти вважатимеш нас бездушними, що не знають каяття...&lt;page&gt;...I такими ми й повиннi тобi здаватися, бо це — цiна нашого прагнення... </entry>
+<entry name="SILK_HEART_MEMORY_WARDBOSS_02">...Iхня пам'ять...</entry>
+<entry name="SILK_HEART_MEMORY_WARDBOSS_03">...Зв'язати iхнi панцирi...</entry>
+<entry name="SILK_HEART_MEMORY_WARDBOSS_01">...Iхнi голоси... Iхня пiсня...</entry>
+<entry name="SILK_HEART_MEMORY_WARDBOSS_06">...Пiдняти iх... Вгору...</entry>
+<entry name="SILK_HEART_MEMORY_WARDBOSS_07">...Для посвячення... Вiчного...</entry>
+<entry name="SILK_HEART_MEMORY_WARDBOSS_04">...Зв'язати iхнi душi...</entry>
+<entry name="SILK_HEART_MEMORY_WARDBOSS_05">...Прив'язати iх усiх...</entry>
+<entry name="MEMORY_FIRSTWEAVER_1">...Вона нарекла нас доньками... Вона нарекла нас божественними створiннями...</entry>
+<entry name="HEART_OUTRO_FLOWER">...Ми е життя... Ми е рiст... Що стане зi свiтом без нас?..</entry>
+<entry name="SILK_HEART_MEMORY_BELLBEAST_08">...Повстати... Пiднятися...</entry>
+<entry name="SILK_HEART_MEMORY_BELLBEAST_FINAL">...Iди сюди, дитя... Узри наше пробудження...</entry>
+<entry name="RED_MEMORY_HIVE">...Добре... Краще...&lt;page&gt;...Але тобi й досi бракуе швидкостi...&lt;page&gt;...З часом вони прийдуть по тебе... Тi, що лякаються твоеi сутностi, i тi, що прагнуть пiдкорити ii собi...&lt;page&gt;...Аби вижити в нашому свiтi, ти повинна навчитися жалити... швидко й раптово...</entry>
+<entry name="HEART_OUTRO_CORAL">...Нашi лапи розтрощать... Нашi лапи правитимуть... Нашi лапи врятують iх усiх...</entry>
+<entry name="HEART_OUTRO_GREEN_PRINCE">...Танцювати... I любити... I завершити свiй шлях... Разом...</entry>
+<entry name="WILDS_START_TAB">Пiлiгриме!&lt;br&gt;Хай цi вогненнi поля випалять усю скверну.&lt;br&gt;Нехай буде тобi дарований шлях угору, в смарагдовi землi.</entry>
+<entry name="SILK_HEART_MEMORY_LACE_1">...Краще сплетене, божевiльне дитя...&lt;br&gt;нiж нiяке...</entry>
+<entry name="MEMORY_NEEDOLIN_1">...Сестри... павучихи... наша пiсня пiдтримуе...</entry>
+<entry name="SILK_HEART_MEMORY_LACE_2">...Краще сплетене, крихке дитя...&lt;br&gt;нiж нiяке...</entry>
+<entry name="SILK_HEART_MEMORY_LACE_3">...Краще сплетене, чисте дитя...&lt;br&gt;нiж вони...</entry>
+<entry name="SILK_HEART_MEMORY_WARDBOSS_FINAL">...Вони належать нам... Пов'язанi навiки...</entry>
+<entry name="MEMORY_NEEDOLIN_2">...Ii свiтло... вiчно... наша пiсня пiдтримуе...</entry>
+<entry name="SILK_HEART_MEMORY_BELLBEAST_07">...Ми вiдчуваемо...</entry>
+<entry name="MR_MUSH_RIDDLE_TAB">Ми говоримо з волi Найголовнiшого Глашатая,&lt;br&gt;чия вiсть — знамення кiнця Епохи.&lt;br&gt;&lt;page&gt;Пiд капелою, зруйнованою волею монарха,&lt;br&gt;I над табором, обвитим Нитками чорнiшими за страх.&lt;page&gt;За межами основи свiту й панцирiв, спалених до сажi,&lt;br&gt;Поруч iз хiрургом в опалi, при вiнцi прядучих веж,&lt;page&gt;Клiтка тiеi, що проти Шовку брехнi повстае,&lt;br&gt;У вишинi жорстоке серце, що все обертае на лiд,&lt;page&gt;Над Пiком колиски чекае останне випробування на свiтi,&lt;br&gt;I вiдiйде Епоха, свiдком якоi був цей гриб.</entry>
+<entry name="HEART_OUTRO_ANT">...Як ми полювали... Як ми спiвали... Дiти моi, я бачила, якi ви прекраснi...</entry>
+<entry name="SILK_HEART_MEMORY_LACE_FINAL">...Iз нашого Шовку... Народжено вiрне дитя...</entry>
+<entry name="MR_MUSH_TAB_TALK">&lt;hpage&gt;Отже, Глашатай прибув i в цi краi...&lt;hpage&gt;Коли вiн тут, у цей час, то грядуть великi потрясiння або жорстокий кiнець. Нiщо iнше не привернуло б його уваги...</entry>
+</entries>

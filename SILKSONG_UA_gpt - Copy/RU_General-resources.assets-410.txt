@@ -1,0 +1,20 @@
+RU_General
+<entries>
+<entry name="DEMO_END_MESSAGE">Дякуємо, що зіграли в демоверсію.</entry>
+<entry name="GAME_TITLE">Порожній Лицар: Silksong</entry>
+<entry name="PROLOGUE_EXCERPT_02">Вони бачать твій спокій, витканий з віри й труду,</entry>
+<entry name="ACT_3_SUPER">ДІЯ 3</entry>
+<entry name="SAVE_WARNING">Ця гра автоматично зберігає дані у певні моменти.&lt;br&gt;Будь ласка, не вимикайте програму, коли відображається цей символ.</entry>
+<entry name="HORNET_NAME">Hornet</entry>
+<entry name="ACT_2_SUPER">ДІЯ 2</entry>
+<entry name="CONTROL_PROMPT">наполегливо рекомендується використовувати контролер</entry>
+<entry name="ACT_2_NAME">CITADEL ПІСНІ</entry>
+<entry name="PROLOGUE_EXCERPT_AUTHOR">- З &#8216;Pharloom&#8217;s Folly&#8217; від Диригента Роміно</entry>
+<entry name="ACT_1_SUPER">АКТ 1</entry>
+<entry name="PROLOGUE_EXCERPT_03">Вони забувають про твоє серце, скуте сном і неволею,</entry>
+<entry name="PROLOGUE_EXCERPT_01">Вони бачать твою красу, таку крихку й витончену,</entry>
+<entry name="ACT_1_NAME">PHARLOOM</entry>
+<entry name="ACT_3_NAME">БЕЗОДНЯ</entry>
+<entry name="PROLOGUE_EXCERPT_04">Коли ти прокинешся, вони узріють твою істину, </entry>
+<entry name="PROLOGUE_EXCERPT_05">Природа звіра, оголена для всіх.</entry>
+</entries>
