@@ -8,8 +8,8 @@ import argparse
 import json
 from pathlib import Path
 
-# Add src to path
-sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+# Add project root to path
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from src.core.config import config_manager
 from src.games.silksong_config import SILKSONG_CONFIG
@@ -47,7 +47,7 @@ def main():
     
     args = parser.parse_args()
     
-    print(f"📚 Starting glossary translation for project: {args.project}")
+    print(f"Starting glossary translation for project: {args.project}")
     print(f"Provider: {args.provider}, Model: {args.model}")
     
     # Register available projects
@@ -61,13 +61,13 @@ def main():
         # Load extracted terms
         terms = glossary_manager.load_extracted_terms()
         if not terms:
-            print("❌ No extracted terms found. Run extract_terms.py first.")
+            print("No extracted terms found. Run extract_terms.py first.")
             return 1
         
         print(f"Found {len(terms)} terms to translate")
         
         if args.dry_run:
-            print("\\n📝 DRY RUN - Terms that would be translated:")
+            print("\\nDRY RUN - Terms that would be translated:")
             for i, term in enumerate(terms[:20], 1):
                 print(f"{i:3}. {term}")
             if len(terms) > 20:
@@ -78,37 +78,37 @@ def main():
         ai_provider = setup_ai_provider(args.provider, args.model)
         
         # Translate terms
-        print("\\n🌍 Translating terms...")
+        print("\\nTranslating terms...")
         translations = ai_provider.translate_glossary(
             terms, 
             source_lang=config.source_lang,
             target_lang="Ukrainian"
         )
         
-        print(f"✅ Translated {len(translations)} terms")
+        print(f"Translated {len(translations)} terms")
         
         # Save translations for manual validation
         translated_file = glossary_manager.save_translated_glossary(terms, translations)
         readable_file = glossary_manager.export_glossary_for_validation()
         
-        print(f"\\n💾 Results saved:")
+        print(f"\\nResults saved:")
         print(f"  JSON format: {translated_file}")
         print(f"  Human-readable: {readable_file}")
         
         # Show sample translations
-        print("\\n📝 Sample translations:")
+        print("\\nSample translations:")
         for i, (en_term, ua_term) in enumerate(list(translations.items())[:10], 1):
             print(f"{i:2}. {en_term:<15} → {ua_term}")
         
         if len(translations) > 10:
             print(f"     ... and {len(translations) - 10} more")
         
-        print(f"\\n⚠️  IMPORTANT: Please review the translations in {readable_file}")
+        print(f"\\nIMPORTANT: Please review the translations in {readable_file}")
         print(f"   Then copy approved translations to final_glossary.json")
-        print(f"\\n📝 Next step: After validation, run 'python scripts/translate_content.py --project {args.project}'")
+        print(f"\\nNext step: After validation, run 'python scripts/translate_content.py --project {args.project}'")
         
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"Error: {e}")
         return 1
     
     return 0

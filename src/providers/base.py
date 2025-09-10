@@ -98,8 +98,9 @@ IMPORTANT:
                               source_lang: str, target_lang: str) -> str:
         """Create prompt for glossary translation"""
         
-        prompt = f"""Translate these video game terms from {source_lang} to {target_lang}.
-Provide natural, contextually appropriate translations that would fit in a fantasy/adventure game setting.
+        prompt = f"""Translate these video game terms from {source_lang} to Ukrainian language (українська мова).
+Provide natural Ukrainian translations that would fit in a fantasy/adventure game setting.
+Use proper Ukrainian grammar and terminology.
 
 Terms to translate:
 """
@@ -108,10 +109,12 @@ Terms to translate:
             prompt += f"- {term}\n"
         
         prompt += f"""
-Respond with ONLY a JSON object with translations, like:
+Respond with a JSON object containing a 'translations' field with the translations, like:
 {{
-    "{terms[0] if terms else 'Example'}": "Translation1",
-    "{terms[1] if len(terms) > 1 else 'Example2'}": "Translation2"
+    "translations": {{
+        "{terms[0] if terms else 'Example'}": "Translation1",
+        "{terms[1] if len(terms) > 1 else 'Example2'}": "Translation2"
+    }}
 }}"""
         
         return prompt

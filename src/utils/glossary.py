@@ -52,8 +52,8 @@ class GlossaryManager:
         with open(translated_terms_file, 'w', encoding='utf-8') as f:
             json.dump(translated_data, f, indent=2, ensure_ascii=False)
         
-        print(f"💾 Saved translated terms to: {translated_terms_file}")
-        print(f"📝 Please review translations and copy to final_glossary.json when ready")
+        print(f"Saved translated terms to: {translated_terms_file}")
+        print(f"Please review translations and copy to final_glossary.json when ready")
         
         return translated_terms_file
     

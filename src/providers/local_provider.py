@@ -25,34 +25,53 @@ class LocalProvider(AIProvider):
         self.retry_delay = retry_delay
         self.timeout = timeout
     
-    def _make_api_call(self, prompt: str, use_json_schema: bool = False) -> str:
+    def _make_api_call(self, prompt: str, use_json_schema: bool = False, schema_type: str = "term_extraction") -> str:
         """Make a single API call to local model"""
         payload = {
             "model": self.model_name,
             "messages": [{"role": "user", "content": prompt}],
             "temperature": self.temperature,
-            "max_tokens": 2000
+            "max_tokens": 8000  # Increased for large glossaries
         }
         
-        # Add structured output for term extraction (LM Studio format)
+        # Add structured output (LM Studio format)
         if use_json_schema:
-            payload["response_format"] = {
-                "type": "json_schema",
-                "json_schema": {
-                    "name": "term_extraction",
-                    "schema": {
-                        "type": "object",
-                        "properties": {
-                            "terms": {
-                                "type": "array",
-                                "items": {"type": "string"},
-                                "description": "List of extracted game-specific terms"
-                            }
-                        },
-                        "required": ["terms"]
+            if schema_type == "term_extraction":
+                payload["response_format"] = {
+                    "type": "json_schema",
+                    "json_schema": {
+                        "name": "term_extraction",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "terms": {
+                                    "type": "array",
+                                    "items": {"type": "string"},
+                                    "description": "List of extracted game-specific terms"
+                                }
+                            },
+                            "required": ["terms"]
+                        }
                     }
                 }
-            }
+            elif schema_type == "glossary_translation":
+                payload["response_format"] = {
+                    "type": "json_schema",
+                    "json_schema": {
+                        "name": "glossary_translation",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "translations": {
+                                    "type": "object",
+                                    "additionalProperties": {"type": "string"},
+                                    "description": "Dictionary mapping English terms to Ukrainian translations"
+                                }
+                            },
+                            "required": ["translations"]
+                        }
+                    }
+                }
         
         for attempt in range(self.max_retries):
             try:
@@ -212,7 +231,8 @@ class LocalProvider(AIProvider):
         prompt = self._create_glossary_prompt(terms, source_lang, target_lang)
         
         try:
-            response = self._make_api_call(prompt)
+            # Use JSON schema for better structured output
+            response = self._make_api_call(prompt, use_json_schema=True, schema_type="glossary_translation")
             # Clean up response in case model adds extra text
             response = response.strip()
             if response.startswith('```json'):
@@ -220,7 +240,15 @@ class LocalProvider(AIProvider):
             if response.endswith('```'):
                 response = response[:-3]
             
-            translations = json.loads(response)
+            data = json.loads(response)
+            # Handle structured output format {"translations": {...}}
+            if isinstance(data, dict) and "translations" in data:
+                translations = data["translations"]
+            elif isinstance(data, dict):
+                translations = data
+            else:
+                translations = {}
+            
             return translations if isinstance(translations, dict) else {}
         except (json.JSONDecodeError, Exception) as e:
             print(f"Glossary translation failed: {e}")
