@@ -104,7 +104,21 @@ class OpenAIProvider(AIProvider):
                         return None  # Signal failure to caller
                 
                 # Try to parse JSON response
-                terms = json.loads(response.strip())
+                data = json.loads(response.strip())
+                
+                # Handle structured output format {"terms": [...]}
+                if isinstance(data, dict) and "terms" in data:
+                    terms = data["terms"]
+                elif isinstance(data, list):
+                    terms = data
+                else:
+                    print(f"  Invalid response format on attempt {attempt + 1}/{max_retries}: unexpected structure")
+                    if attempt < max_retries - 1:
+                        time.sleep(1)
+                        continue
+                    else:
+                        print(f"  Failed: Invalid format after {max_retries} attempts")
+                        return None
                 
                 # Validate that it's a list
                 if not isinstance(terms, list):

@@ -20,7 +20,7 @@ class TermExtractor:
         self.ai_provider = ai_provider
         self.batch_processor = BatchProcessor()
     
-    def extract_all_terms(self, max_files: int = None, max_retries: int = 5) -> Dict[str, Any]:
+    def extract_all_terms(self, max_files: int = None, max_retries: int = 5, target_tokens: int = 10000) -> Dict[str, Any]:
         """Extract terms from all source files"""
         print(f"Extracting terms from {self.config.name} files...")
         
@@ -40,36 +40,62 @@ class TermExtractor:
             print(f"Processing {i}/{len(source_files)}: {file_path.name}")
             
             try:
-                # Extract text from file
-                text = self.file_processor.extract_text_for_terms(file_path)
+                # Read translation units from file
+                units = self.file_processor.read_file(file_path)
                 
-                if text.strip():
+                if not units:
+                    print(f"  Empty file, skipping")
+                    continue
+                
+                print(f"  Processing {len(units)} units with target {target_tokens} tokens per batch")
+                
+                # Split units into token-based batches
+                try:
+                    unit_batches = self._create_token_batches(units, target_tokens)
+                except ValueError as e:
+                    print(f"  ERROR: {e}")
+                    failed_files.append({
+                        'file_path': str(file_path),
+                        'file_name': file_path.name,
+                        'reason': 'context_too_small',
+                        'error': str(e)
+                    })
+                    continue
+                
+                file_all_terms = set()
+                
+                for batch_idx, unit_batch in enumerate(unit_batches, 1):
+                    batch_text = "\n".join([unit.original_text for unit in unit_batch])
+                    estimated_tokens = self._estimate_tokens(batch_text)
+                    print(f"    Batch {batch_idx}/{len(unit_batches)}: {len(unit_batch)} units (~{estimated_tokens} tokens)")
+                    
                     # Extract terms using AI with retry logic
-                    terms = self.ai_provider.extract_terms(
-                        text, 
-                        context=f"Video game localization file: {file_path.name}",
+                    batch_terms = self.ai_provider.extract_terms(
+                        batch_text, 
+                        context=f"Video game localization file: {file_path.name} (batch {batch_idx}/{len(unit_batches)})",
                         max_retries=max_retries
                     )
                     
                     # Check if extraction failed (returns None on failure)
-                    if terms is None:
-                        print(f"  FAILED after {max_retries} retries - adding to failed files list")
-                        failed_files.append({
-                            'file_path': str(file_path),
-                            'file_name': file_path.name,
-                            'reason': 'extraction_failed',
-                            'text_length': len(text)
-                        })
+                    if batch_terms is None:
+                        print(f"    Batch {batch_idx} FAILED after {max_retries} retries")
+                        # Don't fail the whole file, just this batch
                         continue
                     
-                    if terms:  # Non-empty list
-                        file_terms[file_path.name] = terms
-                        all_terms.update(terms)
-                        print(f"  Found {len(terms)} terms: {', '.join(terms[:5])}{'...' if len(terms) > 5 else ''}")
+                    if batch_terms:  # Non-empty list
+                        file_all_terms.update(batch_terms)
+                        print(f"    Batch {batch_idx}: Found {len(batch_terms)} terms")
                     else:  # Empty list (valid response but no terms)
-                        print(f"  No terms found (valid empty response)")
+                        print(f"    Batch {batch_idx}: No terms found")
+                
+                # Store results for this file
+                if file_all_terms:
+                    terms_list = sorted(list(file_all_terms))
+                    file_terms[file_path.name] = terms_list
+                    all_terms.update(file_all_terms)
+                    print(f"  File total: {len(terms_list)} terms: {', '.join(terms_list[:5])}{'...' if len(terms_list) > 5 else ''}")
                 else:
-                    print(f"  Empty file, skipping")
+                    print(f"  File total: No terms found")
                     
             except Exception as e:
                 print(f"  Error processing {file_path.name}: {e}")
@@ -228,4 +254,58 @@ class TermExtractor:
         except Exception as e:
             print(f"Error during retry: {e}")
             return {}
+    
+    def _estimate_tokens(self, text: str) -> int:
+        """Rough token estimation: ~4 chars per token for English"""
+        return len(text) // 4
+    
+    def _create_token_batches(self, units: List, target_tokens: int) -> List[List]:
+        """Create batches based on token count"""
+        
+        # Reserve tokens for prompt overhead (instructions, context, etc.)
+        overhead_tokens = 1000  
+        available_tokens = target_tokens - overhead_tokens
+        
+        if available_tokens <= 0:
+            raise ValueError(f"Target tokens ({target_tokens}) too low, need at least {overhead_tokens + 100} tokens")
+        
+        batches = []
+        current_batch = []
+        current_tokens = 0
+        
+        for unit in units:
+            unit_tokens = self._estimate_tokens(unit.original_text)
+            
+            # If single unit exceeds available tokens, that's an error
+            if unit_tokens > available_tokens:
+                if not current_batch:  # This is the first unit and it's too big
+                    raise ValueError(f"Single translation unit too large ({unit_tokens} tokens) for context window. "
+                                   f"Available: {available_tokens} tokens. Increase target_tokens parameter.")
+                else:
+                    # Save current batch and try the big unit alone
+                    batches.append(current_batch)
+                    current_batch = []
+                    current_tokens = 0
+                    # Still add the big unit, but warn
+                    print(f"    WARNING: Unit '{unit.original_text[:50]}...' ({unit_tokens} tokens) exceeds target")
+            
+            # Check if adding this unit would exceed the limit
+            if current_tokens + unit_tokens > available_tokens and current_batch:
+                # Save current batch and start new one
+                batches.append(current_batch)
+                current_batch = [unit]
+                current_tokens = unit_tokens
+            else:
+                # Add to current batch
+                current_batch.append(unit)
+                current_tokens += unit_tokens
+        
+        # Don't forget the last batch
+        if current_batch:
+            batches.append(current_batch)
+        
+        if not batches:
+            raise ValueError("No batches could be created - all units too large for context window")
+        
+        return batches
     

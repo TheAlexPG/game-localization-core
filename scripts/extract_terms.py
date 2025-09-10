@@ -45,6 +45,7 @@ def main():
     parser.add_argument("--model", default="gpt-4o", help="Model name to use")
     parser.add_argument("--max-files", type=int, help="Maximum number of files to process (for testing)")
     parser.add_argument("--max-retries", type=int, default=5, help="Maximum retries for failed extractions (default: 5)")
+    parser.add_argument("--target-tokens", type=int, default=10000, help="Target tokens per batch (default: 10000)")
     parser.add_argument("--retry-failed", action="store_true", help="Retry only previously failed files")
     parser.add_argument("--dry-run", action="store_true", help="Show what would be processed without actually doing it")
     
@@ -101,7 +102,8 @@ def main():
             print("\\nStarting extraction...")
             terms_data = extractor.extract_all_terms(
                 max_files=args.max_files, 
-                max_retries=args.max_retries
+                max_retries=args.max_retries,
+                target_tokens=args.target_tokens
             )
             
             # Save results

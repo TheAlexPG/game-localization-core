@@ -90,7 +90,7 @@ IMPORTANT:
             prompt += f"Context: {context}\n\n"
         
         prompt += f"Text to analyze:\n{text}\n\n"
-        prompt += "Respond with ONLY a JSON array of terms, like: [\"Term1\", \"Term2\", \"Term3\"] or [] if no terms found."
+        prompt += "Respond with a JSON object containing a 'terms' array, like: {\"terms\": [\"Term1\", \"Term2\", \"Term3\"]} or {\"terms\": []} if no terms found."
         
         return prompt
     

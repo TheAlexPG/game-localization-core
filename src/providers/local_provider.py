@@ -16,14 +16,16 @@ class LocalProvider(AIProvider):
     
     def __init__(self, base_url: str = "http://localhost:1234/v1/chat/completions",
                  model_name: str = "local-model", temperature: float = 0.3,
-                 max_parallel: int = 2, max_retries: int = 3, retry_delay: int = 2):
+                 max_parallel: int = 2, max_retries: int = 3, retry_delay: int = 2,
+                 timeout: int = 120):
         super().__init__(model_name, temperature)
         self.base_url = base_url
         self.max_parallel = max_parallel
         self.max_retries = max_retries
         self.retry_delay = retry_delay
+        self.timeout = timeout
     
-    def _make_api_call(self, prompt: str) -> str:
+    def _make_api_call(self, prompt: str, use_json_schema: bool = False) -> str:
         """Make a single API call to local model"""
         payload = {
             "model": self.model_name,
@@ -32,13 +34,33 @@ class LocalProvider(AIProvider):
             "max_tokens": 2000
         }
         
+        # Add structured output for term extraction (LM Studio format)
+        if use_json_schema:
+            payload["response_format"] = {
+                "type": "json_schema",
+                "json_schema": {
+                    "name": "term_extraction",
+                    "schema": {
+                        "type": "object",
+                        "properties": {
+                            "terms": {
+                                "type": "array",
+                                "items": {"type": "string"},
+                                "description": "List of extracted game-specific terms"
+                            }
+                        },
+                        "required": ["terms"]
+                    }
+                }
+            }
+        
         for attempt in range(self.max_retries):
             try:
                 response = requests.post(
                     self.base_url,
                     json=payload,
                     headers={"Content-Type": "application/json"},
-                    timeout=60
+                    timeout=self.timeout
                 )
                 response.raise_for_status()
                 
@@ -100,9 +122,13 @@ class LocalProvider(AIProvider):
         """Extract important terms from text with retry logic"""
         prompt = self._create_extraction_prompt(text, context)
         
+        # Try structured output first, fallback to regular if it fails
+        use_structured = False  # Disable for now, can enable later
+        
         for attempt in range(max_retries):
             try:
-                response = self._make_api_call(prompt)
+                # Use structured output for better JSON compliance
+                response = self._make_api_call(prompt, use_json_schema=use_structured)
                 
                 # Check if response is empty or just whitespace
                 if not response or not response.strip():
@@ -123,7 +149,21 @@ class LocalProvider(AIProvider):
                 response = response.strip()
                 
                 # Try to parse JSON response
-                terms = json.loads(response)
+                data = json.loads(response)
+                
+                # Handle structured output format {"terms": [...]}
+                if isinstance(data, dict) and "terms" in data:
+                    terms = data["terms"]
+                elif isinstance(data, list):
+                    terms = data
+                else:
+                    print(f"  Invalid response format on attempt {attempt + 1}/{max_retries}: unexpected structure")
+                    if attempt < max_retries - 1:
+                        time.sleep(1)
+                        continue
+                    else:
+                        print(f"  Failed: Invalid format after {max_retries} attempts")
+                        return None
                 
                 # Validate that it's a list
                 if not isinstance(terms, list):
@@ -149,6 +189,13 @@ class LocalProvider(AIProvider):
                     
             except Exception as e:
                 print(f"  API error on attempt {attempt + 1}/{max_retries}: {e}")
+                
+                # If structured output fails and this is first attempt, try without it
+                if use_structured and "400" in str(e):
+                    print(f"  Structured output failed, trying without schema...")
+                    use_structured = False
+                    continue
+                
                 if attempt < max_retries - 1:
                     time.sleep(2)
                     continue
