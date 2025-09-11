@@ -118,6 +118,22 @@ class GlossaryManager:
         
         return readable_file
     
+    def export_glossary_for_validation_direct(self, translations: Dict[str, str]) -> Path:
+        """Export glossary in human-readable format directly from translations dict"""
+        # Create readable format
+        readable_file = self.glossary_dir / "glossary_for_review.txt"
+        with open(readable_file, 'w', encoding='utf-8') as f:
+            f.write(f"Glossary for {self.config.name} - Review translations if needed\n")
+            f.write("=" * 60 + "\n\n")
+            
+            for en_term, ua_term in sorted(translations.items()):
+                f.write(f"{en_term:<20} → {ua_term}\n")
+            
+            f.write(f"\n\nTotal terms: {len(translations)}")
+            f.write("\n\nGlossary is ready for use in translation.")
+        
+        return readable_file
+    
     def get_glossary_stats(self) -> Dict[str, Any]:
         """Get glossary statistics"""
         stats = {

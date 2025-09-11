@@ -48,7 +48,7 @@ class BatchProcessor:
         return results
     
     def batch_translation_units(self, units: List[TranslationUnit], 
-                              batch_size: int = 10) -> List[List[TranslationUnit]]:
+                              batch_size: int = 5) -> List[List[TranslationUnit]]:
         """Split translation units into batches"""
         return [units[i:i + batch_size] for i in range(0, len(units), batch_size)]
     

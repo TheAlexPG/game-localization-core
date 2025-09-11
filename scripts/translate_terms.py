@@ -15,6 +15,7 @@ from src.core.config import config_manager
 from src.games.silksong_config import SILKSONG_CONFIG
 from src.providers.openai_provider import OpenAIProvider
 from src.providers.local_provider import LocalProvider
+from src.providers.deepseek_provider import DeepSeekProvider
 from src.utils.glossary import GlossaryManager
 from dotenv import load_dotenv
 
@@ -33,6 +34,12 @@ def setup_ai_provider(provider_type: str, model: str):
         base_url = os.getenv("LOCAL_API_URL", "http://localhost:1234/v1/chat/completions")
         return LocalProvider(base_url=base_url, model_name=model)
     
+    elif provider_type == "deepseek":
+        api_key = os.getenv("DEEPSEEK_API_KEY")
+        if not api_key:
+            raise ValueError("DEEPSEEK_API_KEY not found in environment variables")
+        return DeepSeekProvider(api_key=api_key, model_name=model)
+    
     else:
         raise ValueError(f"Unknown provider type: {provider_type}")
 
@@ -40,7 +47,7 @@ def setup_ai_provider(provider_type: str, model: str):
 def main():
     parser = argparse.ArgumentParser(description="Translate extracted terms for glossary")
     parser.add_argument("--project", required=True, help="Project name (e.g., silksong)")
-    parser.add_argument("--provider", choices=["openai", "local"], default="openai", 
+    parser.add_argument("--provider", choices=["openai", "local", "deepseek"], default="openai", 
                        help="AI provider to use")
     parser.add_argument("--model", default="gpt-4o", help="Model name to use")
     parser.add_argument("--dry-run", action="store_true", help="Show what would be translated without actually doing it")
@@ -87,12 +94,12 @@ def main():
         
         print(f"Translated {len(translations)} terms")
         
-        # Save translations for manual validation
-        translated_file = glossary_manager.save_translated_glossary(terms, translations)
-        readable_file = glossary_manager.export_glossary_for_validation()
+        # Save final glossary directly
+        final_file = glossary_manager.create_final_glossary(translations)
+        readable_file = glossary_manager.export_glossary_for_validation_direct(translations)
         
         print(f"\\nResults saved:")
-        print(f"  JSON format: {translated_file}")
+        print(f"  Final glossary: {final_file}")
         print(f"  Human-readable: {readable_file}")
         
         # Show sample translations
@@ -103,9 +110,8 @@ def main():
         if len(translations) > 10:
             print(f"     ... and {len(translations) - 10} more")
         
-        print(f"\\nIMPORTANT: Please review the translations in {readable_file}")
-        print(f"   Then copy approved translations to final_glossary.json")
-        print(f"\\nNext step: After validation, run 'python scripts/translate_content.py --project {args.project}'")
+        print(f"\\nIMPORTANT: Review translations in {readable_file} if needed")
+        print(f"\\nNext step: Run 'python scripts/translate_content.py --project {args.project}'")
         
     except Exception as e:
         print(f"Error: {e}")

@@ -15,6 +15,7 @@ from src.games.silksong_config import SILKSONG_CONFIG
 from src.processors.silksong_processor import SilksongProcessor
 from src.providers.openai_provider import OpenAIProvider
 from src.providers.local_provider import LocalProvider
+from src.providers.deepseek_provider import DeepSeekProvider
 from src.pipeline.extractor import TermExtractor
 from dotenv import load_dotenv
 
@@ -33,6 +34,12 @@ def setup_ai_provider(provider_type: str, model: str):
         base_url = os.getenv("LOCAL_API_URL", "http://localhost:1234/v1/chat/completions")
         return LocalProvider(base_url=base_url, model_name=model)
     
+    elif provider_type == "deepseek":
+        api_key = os.getenv("DEEPSEEK_API_KEY")
+        if not api_key:
+            raise ValueError("DEEPSEEK_API_KEY not found in environment variables")
+        return DeepSeekProvider(api_key=api_key, model_name=model)
+    
     else:
         raise ValueError(f"Unknown provider type: {provider_type}")
 
@@ -40,7 +47,7 @@ def setup_ai_provider(provider_type: str, model: str):
 def main():
     parser = argparse.ArgumentParser(description="Extract terms for glossary creation")
     parser.add_argument("--project", required=True, help="Project name (e.g., silksong)")
-    parser.add_argument("--provider", choices=["openai", "local"], default="openai", 
+    parser.add_argument("--provider", choices=["openai", "local", "deepseek"], default="openai", 
                        help="AI provider to use")
     parser.add_argument("--model", default="gpt-4o", help="Model name to use")
     parser.add_argument("--max-files", type=int, help="Maximum number of files to process (for testing)")
