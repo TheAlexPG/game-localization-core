@@ -44,7 +44,7 @@ def main():
     parser.add_argument("--provider", choices=["openai", "local"], default="openai", 
                        help="AI provider to use")
     parser.add_argument("--model", default="gpt-4o", help="Model name to use")
-    parser.add_argument("--batch-size", type=int, default=10, help="Translation batch size")
+    parser.add_argument("--batch-size", type=int, default=5, help="Translation batch size")
     parser.add_argument("--max-files", type=int, help="Maximum number of files to process (for testing)")
     parser.add_argument("--parallel", action="store_true", default=True, help="Enable parallel processing")
     parser.add_argument("--no-parallel", dest="parallel", action="store_false", help="Disable parallel processing")
