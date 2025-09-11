@@ -15,7 +15,7 @@ class OpenAIProvider(AIProvider):
     """OpenAI API provider with parallel processing support"""
     
     def __init__(self, api_key: str, model_name: str = "gpt-4o", 
-                 temperature: float = 0.3, max_parallel: int = 5,
+                 temperature: float = 1, max_parallel: int = 5,
                  max_retries: int = 3, retry_delay: int = 2):
         super().__init__(model_name, temperature)
         self.client = OpenAI(api_key=api_key)
