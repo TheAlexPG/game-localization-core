@@ -41,6 +41,12 @@ class AIProvider(ABC):
         prompt = f"""Translate the following text from {source_lang} to {target_lang}.
 Keep the translation natural and contextually appropriate for a video game.
 
+CRITICAL FORMATTING RULES:
+- Preserve ALL XML-like tags exactly: &lt;page=S&gt;, &lt;hpage&gt;, etc.
+- Keep ALL special characters and HTML entities as-is: &#8217;, &amp;, etc.
+- Do NOT change any formatting, tags, or special symbols
+- Only translate the actual text content, not the markup
+
 """
         
         if preserve_terms:
@@ -52,7 +58,7 @@ Keep the translation natural and contextually appropriate for a video game.
                 prompt += f"- {en_term} → {ua_term}\n"
             prompt += "\n"
         
-        prompt += "Translate each line and provide ONLY the translation, no explanations:\n\n"
+        prompt += "Translate each line and provide ONLY the translation, preserving all formatting:\n\n"
         
         for unit in units:
             prompt += f"{unit.original_text}\n"
