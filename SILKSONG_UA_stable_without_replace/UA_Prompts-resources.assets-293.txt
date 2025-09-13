@@ -1,4 +1,4 @@
-RU_Prompts
+DE_Prompts
 <entries>
 <entry name="TOLL_BENCH">Механізм із символом лави.</entry>
 <entry name="GET_NEEDOLIN_1">Награвання давніх мелодій на натягнутій уздовж голки шовковій нитці.</entry>

@@ -1,4 +1,4 @@
-RU_Achievements
+DE_Achievements
 <entries>
 <entry name="JOURNAL_FULL_DESC">Отримайте сувенір від Нуу</entry>
 <entry name="MATERIUM_FULL_NAME">Матеріалізм</entry>

@@ -1,0 +1,20 @@
+DE_General
+<entries>
+<entry name="DEMO_END_MESSAGE">Vielen Dank fürs Spielen der Demo!</entry>
+<entry name="GAME_TITLE">Hollow Knight: Silksong</entry>
+<entry name="PROLOGUE_EXCERPT_02">Sie sehen deinen Frieden, aus Glauben und Mühen.</entry>
+<entry name="ACT_3_SUPER">AKT 3</entry>
+<entry name="SAVE_WARNING">Dieses Spiel speichert an gewissen Punkten automatisch.&lt;br&gt;Bitte das Programm nicht schließen, während dieses Symbol angezeigt wird.</entry>
+<entry name="HORNET_NAME">Hornet</entry>
+<entry name="ACT_2_SUPER">AKT 2</entry>
+<entry name="CONTROL_PROMPT">Die Nutzung eines Controllers wird dringend empfohlen</entry>
+<entry name="ACT_2_NAME">SANGESZITADELLE</entry>
+<entry name="PROLOGUE_EXCERPT_AUTHOR">- Aus „Pharlooms Torheit&#8220; von Dirigent Romino</entry>
+<entry name="ACT_1_SUPER">AKT 1</entry>
+<entry name="PROLOGUE_EXCERPT_03">Dein geknechtetes und schlafendes Herz wird vergessen,</entry>
+<entry name="PROLOGUE_EXCERPT_01">Sie sehen deine Schönheit, so zart und so fein.</entry>
+<entry name="ACT_1_NAME">PHARLOOM</entry>
+<entry name="ACT_3_NAME">ABGRUND</entry>
+<entry name="PROLOGUE_EXCERPT_04">Wenn du erwachst, werden sie die Wahrheit sehen.</entry>
+<entry name="PROLOGUE_EXCERPT_05">Das Wesen eines Tiers, vor aller Augen.</entry>
+</entries>

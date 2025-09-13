@@ -1,4 +1,4 @@
-RU_UI
+DE_UI
 <entries>
 <entry name="INV_DESC_MOSSBERRY">Соковиті ягоди, що ростуть у вологих місцях. Їхнє насіння – смертельна отрута для більшості створінь.</entry>
 <entry name="INV_NAME_DRESS_BROLLY">Плащ волоцюги</entry>

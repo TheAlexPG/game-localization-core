@@ -1,4 +1,4 @@
-RU_Quests
+DE_Quests
 <entries>
 <entry name="Q_SOUL_SNARE_PRE_DESC_WALL">Гей, набридлива дзвонарко, ти прочитала це бажання? Тоді йди нагору, до вівтаря. Нам із тобою, мабуть, варто трохи побалакати.</entry>
 <entry name="SQ_MELODY_ARCHITECT_PROMPT">Одна з партій Тричастної Мелодії, доручена старанним Архітекторам.</entry>

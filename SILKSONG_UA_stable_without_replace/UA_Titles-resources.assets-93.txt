@@ -1,4 +1,4 @@
-RU_Titles
+DE_Titles
 <entries>
 <entry name="LARGE_COG_WORK_SUPER"></entry>
 <entry name="WEAVE_ABYSS_MAIN">Абсолом</entry>

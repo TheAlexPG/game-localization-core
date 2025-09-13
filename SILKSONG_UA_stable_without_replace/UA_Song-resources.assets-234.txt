@@ -1,4 +1,4 @@
-RU_Song
+DE_Song
 <entries>
 <entry name="HUNTER_FAN_02">Безпомилково має дізнатися Нуу відважна!</entry>
 <entry name="HUNTER_FAN_03">Їхні ноги повзуть, крила їх б'ють...</entry>

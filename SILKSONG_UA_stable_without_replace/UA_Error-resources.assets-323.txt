@@ -1,4 +1,4 @@
-RU_Error
+DE_Error
 <entries>
 <entry name="OK">Гаразд</entry>
 <entry name="SAVE_FAILED_DESC">Спробуйте ще раз. Якщо проблема збережеться, зайдіть на teamcherry.com.au/help для отримання додаткової інформації.</entry>

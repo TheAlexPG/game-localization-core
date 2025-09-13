@@ -1,4 +1,4 @@
-RU_General
+DE_General
 <entries>
 <entry name="DEMO_END_MESSAGE">Дякуємо вам за гру в демоверсію.</entry>
 <entry name="GAME_TITLE">Hollow Knight: Silksong</entry>

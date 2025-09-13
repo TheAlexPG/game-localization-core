@@ -1,4 +1,4 @@
-RU_Tools
+DE_Tools
 <entries>
 <entry name="EQUIP_BENCH_MSG_CURSED_TOOL">Неможливо вибрати інструменти</entry>
 <entry name="SYRINGE_LIFEBLOOD_DESC">Списоподібна судина з плазміумом усередині.&lt;br&gt;&lt;br&gt;Ін'єкція цієї рідини збільшує здоров'я понад природну межу.</entry>

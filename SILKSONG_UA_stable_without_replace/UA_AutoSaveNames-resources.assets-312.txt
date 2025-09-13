@@ -1,4 +1,4 @@
-RU_AutoSaveNames
+DE_AutoSaveNames
 <entries>
 <entry name="GAINED_MELODY_BEAST">Вивчено Звірячу Мелодію</entry>
 <entry name="SAVED_BELLHART">Врятовано Дзвонвілль</entry>

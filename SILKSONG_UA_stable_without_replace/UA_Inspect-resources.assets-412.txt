@@ -1,4 +1,4 @@
-RU_Inspect
+DE_Inspect
 <entries>
 <entry name="BELLTOWN_HOUSE_LOCKED">Замкнений Дзвінкий дім.</entry>
 <entry name="WISP_BOMB_PROMPT">Сконструювати інструмент?</entry>

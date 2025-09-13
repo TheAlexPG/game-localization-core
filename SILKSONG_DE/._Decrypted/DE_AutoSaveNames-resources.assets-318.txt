@@ -1,0 +1,40 @@
+DE_AutoSaveNames
+<entries>
+<entry name="GAINED_MELODY_BEAST">BiestMelodieErl</entry>
+<entry name="SAVED_BELLHART">GlockenHerzGer</entry>
+<entry name="GAINED_BROLLY">HerumtrGewandErh</entry>
+<entry name="GAINED_REAPER">SchnitterWappenErh</entry>
+<entry name="GAINED_MELODY_CONDUCTOR">DirigentMelodieErl</entry>
+<entry name="GAINED_DOUBLE_JUMP">FeenGewandErh</entry>
+<entry name="ACT_3">Akt3Beginn</entry>
+<entry name="ACT_2">Akt2Beginn</entry>
+<entry name="ACT_1">Akt1Beginn</entry>
+<entry name="GAINED_WHITE_FLOWER">WeißeBlumeErh</entry>
+<entry name="SLAB_CAPTURED">Eingesperrt</entry>
+<entry name="GAINED_SILKNEEDLE">BleicheNägelErh</entry>
+<entry name="GAINED_SILKSPEAR">SeidenSpeerErh</entry>
+<entry name="GAINED_BEAST">BestienWappenErh</entry>
+<entry name="GAINED_HEART_BLOOM">NylethBesiegt</entry>
+<entry name="GAINED_MELODY_LIBRARIAN">GruftMelodieErl</entry>
+<entry name="GAINED_SPRINT">FlinkerSchrittErh</entry>
+<entry name="GAINED_SUPER_JUMP">SeidenAufschwungErh</entry>
+<entry name="GAINED_THREADSPHERE">FadenSturmErh</entry>
+<entry name="GAINED_CURSE">Verflucht</entry>
+<entry name="GAINED_WANDERER">WandererWappenErh</entry>
+<entry name="GAINED_TOOMASTER">ArchitektenWappenErh</entry>
+<entry name="GAINED_HARPOON">GreifSchnurErh</entry>
+<entry name="GAINED_WALLJUMP">KlammerGriffErh</entry>
+<entry name="GAINED_MELODY_ARCHITECT">RadMelodieErl</entry>
+<entry name="GAINED_HEART_HUNTER">KarmelitaBesiegt</entry>
+<entry name="GAINED_NEEDOLIN">NadolinErh</entry>
+<entry name="GAINED_MELODY_DEEP">TiefeMelodieErl</entry>
+<entry name="GAINED_HEART_CLOVER">KleeTänzerBesiegt</entry>
+<entry name="GAINED_SILKCHARGE">ScharfPfeilErh</entry>
+<entry name="GAINED_WITCH">HexenWappenErh</entry>
+<entry name="GAINED_SLYTHSONG">SylphenLiedErh</entry>
+<entry name="GAINED_SHAMAN">SchamanenWappenErh</entry>
+<entry name="UNLOCKED_MELODY_LIFT">WiegenDeckelGeöff</entry>
+<entry name="GAINED_RUNE_BOMB">RunenZornErh</entry>
+<entry name="GAINED_PARRY">KreuzStichErh</entry>
+<entry name="GAINED_HEART_CORAL">KhannBesiegt</entry>
+</entries>

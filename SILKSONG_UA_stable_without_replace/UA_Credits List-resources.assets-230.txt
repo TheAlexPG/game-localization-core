@@ -1,4 +1,4 @@
-RU_Credits List
+DE_Credits List
 <entries>
 <entry name="CREDITS_CHARVOICE_HORNET">Hornet</entry>
 <entry name="CREDITS_KNIGHTS_OF_U_SUPPORT_NAME_L">Kamil Kloc<br>Jan Mróz</entry>

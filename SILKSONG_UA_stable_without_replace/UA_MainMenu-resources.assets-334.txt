@@ -1,4 +1,4 @@
-RU_MainMenu
+DE_MainMenu
 <entries>
 <entry name="PROFILE_INCOMPATIBLE">Несумісна версія</entry>
 <entry name="UI_MENU_STYLE_HORNET">Silksong</entry>

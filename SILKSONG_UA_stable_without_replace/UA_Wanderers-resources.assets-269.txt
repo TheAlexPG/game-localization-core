@@ -1,4 +1,4 @@
-RU_Wanderers
+DE_Wanderers
 
 <entries>
 

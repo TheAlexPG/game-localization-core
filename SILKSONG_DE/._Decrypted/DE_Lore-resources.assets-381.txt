@@ -1,0 +1,46 @@
+DE_Lore
+<entries>
+<entry name="MARROW_START_SIGN">Pilger&lt;br&gt;Es ist ein Segen, dass du durch Pharlooms Fundamente schreiten kannst.&lt;br&gt;Ehre die Schalen all jener, die ihr Leben gaben, um das Gewicht unseres Reichs zu tragen.</entry>
+<entry name="RED_MEMORY_ROOT2">&lt;hpage&gt;Du irrst dich. Ich wusste, was du dir von mir wünschtest. Und ich kannte den Preis, um den Wunsch zu erfüllen. Und nun, nach all den Zeitaltern, weiß ich es besser ...&lt;hpage&gt;Stärke ... im Geist. In der Fürsorge. In der Kralle. Genug Stärke, um eine bessere Welt als die unsere zu erleben. Um eine Welt nach meinen Wünschen zu erschaffen.&lt;hpage&gt;Das wünschte ich mir von meiner Mutter. Von meiner Mentorin. Von dir.&lt;page&gt;... So ist es, Spinne ... Es muss dich so viele Schmerzen gekostet haben, unseren Wunsch so klar aussprechen zu können ...&lt;page&gt;Für sie wirst du zu jemandem, der unseren Wunsch kennt. Zu jemandem, der die ganze Dunkelheit unter unserem Zuhause gesehen hat. Ich würde dir das Geschenk zeigen ...</entry>
+<entry name="CORAL_CRUST_TAB_1">Korallen schwingen hin und her.&lt;br&gt;Klares Wasser fließt.&lt;br&gt;In unserem Fluss ohne Zeit.</entry>
+<entry name="SILK_HEART_MEMORY_BELLBEAST_03">Angekommen ... Endlich ...</entry>
+<entry name="SILK_HEART_MEMORY_BELLBEAST_04">Unsere Seide ...</entry>
+<entry name="RED_MEMORY_ROOT3">Erblicke das erste Licht. Unser einziges Mittel gegen die Leere, mit der unsere Sippe bis in alle Ewigkeit verbunden ist.&lt;page&gt;Greife nach vorne, starkes Kind. Nimm es aus dieser Erinnerung. Befreie dich brennend von unserem traurigen Schicksal.</entry>
+<entry name="SILK_HEART_MEMORY_BELLBEAST_05">Unsere Stärke ...</entry>
+<entry name="SILK_HEART_MEMORY_BELLBEAST_06">Unsere Natur ...</entry>
+<entry name="SILK_HEART_MEMORY_LACE_4">... Eins, das unser Erwachen wünscht ...</entry>
+<entry name="RED_MEMORY_BEAST">... Ignoriere sie, Tochter ... Ignoriere ihr Flüstern ...&lt;page&gt;... Weber, Wächter, Königin ... Das sind ihre Wünsche ... Nicht deine ... Es sind gewiss nicht meine ...&lt;page&gt;... Nur wenn du ihnen widerstehst, kannst du es sehen ... Eine andere Hoffnung, eine Zukunft ...&lt;page&gt;... Aber die Erinnerung an diese Worte in dieser fernen Zeit ...&lt;page&gt;... Wirst du dich überhaupt an mich erinnern, Kind? Könntest du es?&lt;page&gt;... Eine Mutter, vor der Maske ... vor der ewigen Pflicht ...</entry>
+<entry name="RED_MEMORY_WEAVERS">Zeig uns deine Kunst, Kind ...&lt;page&gt;... Zeige ihren Glanz, wie nur wir ihn lehren ...&lt;page&gt;... Zeige, dass du mehr Weber als Wyrm bist ...</entry>
+<entry name="CORAL_CRUST_TAB_2">An der Quelle des Wassers&lt;br&gt;Und am Herzen der Korallen&lt;br&gt;Wurde unser letzter Fürst geboren.</entry>
+<entry name="MEMORY_FIRSTWEAVER_2">... Sie nannte uns Töchter ... ... Sie nannte uns göttlich ... &lt;br&gt;Sie log ...</entry>
+<entry name="SILK_HEART_MEMORY_BELLBEAST_01">Kind ... Weber ... </entry>
+<entry name="SILK_HEART_MEMORY_WARDBOSS_08">... Ein Geist ... Eine Einheit ...</entry>
+<entry name="SILK_HEART_MEMORY_BELLBEAST_02">Kind ... Spinne ...</entry>
+<entry name="RED_MEMORY_ROOT">... Spinnenkind ...&lt;page&gt;... Du wirst uns für hartherzig halten ... Für gefühllos. Wirst glauben, wir wären unfähig, Buße zu tun ....&lt;page&gt;... Ein verständliches Urteil ... Weil es der Preis unseres Wunsches ist ... </entry>
+<entry name="SILK_HEART_MEMORY_WARDBOSS_02">... Ihre Erinnerung ...</entry>
+<entry name="SILK_HEART_MEMORY_WARDBOSS_03">... Binde ihre Schalen ...</entry>
+<entry name="SILK_HEART_MEMORY_WARDBOSS_01">... Ihre Stimmen ... Ihr Lied ...</entry>
+<entry name="SILK_HEART_MEMORY_WARDBOSS_06">... Erhebe sie ... Hoch ...</entry>
+<entry name="SILK_HEART_MEMORY_WARDBOSS_07">... Um zu widmen ... Ewig ...</entry>
+<entry name="SILK_HEART_MEMORY_WARDBOSS_04">... Binde ihre Seelen ...</entry>
+<entry name="SILK_HEART_MEMORY_WARDBOSS_05">... Binde sie alle ...</entry>
+<entry name="MEMORY_FIRSTWEAVER_1">... Sie nannte uns Töchter ... ... Sie nannte uns göttlich ...</entry>
+<entry name="HEART_OUTRO_FLOWER">... Wir sind das Leben ... ... Wir sind das Wachstum ... ... Was wäre die Welt ohne uns?</entry>
+<entry name="SILK_HEART_MEMORY_BELLBEAST_08">Sie erhebt sich ... Sie erhebt sich ...</entry>
+<entry name="SILK_HEART_MEMORY_BELLBEAST_FINAL">Komm, Kind ... Erlebe unser Erwachen ...</entry>
+<entry name="RED_MEMORY_HIVE">... Gut ... Besser ...&lt;page&gt;Aber du musst noch schneller sein ...&lt;page&gt;... Irgendwann kommen sie zu dir ... Die, die dein Wesen fürchten. Und die, die es haben wollen ...&lt;page&gt;... Wenn du unsere Welt überleben willst, musst du zustechen ... Flink und plötzlich ...</entry>
+<entry name="HEART_OUTRO_CORAL">... Unsere zerschmetterten Krallen ... ... Unsere herrschenden Krallen ... ... Unsere Krallen, die alle retten ...</entry>
+<entry name="HEART_OUTRO_GREEN_PRINCE">... Tanzend ... Liebend ... Das Ende ... Gemeinsam ...</entry>
+<entry name="WILDS_START_TAB">Pilger&lt;br&gt;Mögen diese Flammenfelder jegliche Unreinheiten beseitigen.&lt;br&gt;Damit du in die grünen Länder oben aufsteigen kannst.</entry>
+<entry name="SILK_HEART_MEMORY_LACE_1">... Lieber ein wirr gewebtes Kind ... als keins ...</entry>
+<entry name="MEMORY_NEEDOLIN_1">... Schwestern ... Spinnen ... unser Lied erhält ...</entry>
+<entry name="SILK_HEART_MEMORY_LACE_2">... Lieber ein zart gewebtes Kind ... als keins ...</entry>
+<entry name="SILK_HEART_MEMORY_LACE_3">... Lieber ein rein gewebtes Kind ... als sie ...</entry>
+<entry name="SILK_HEART_MEMORY_WARDBOSS_FINAL">... Sie gehören uns ... Für immer gebunden ...</entry>
+<entry name="MEMORY_NEEDOLIN_2">... Für ihr Licht ... ewig ... unser Lied erhält ...</entry>
+<entry name="SILK_HEART_MEMORY_BELLBEAST_07">Wir fühlen sie ...</entry>
+<entry name="MR_MUSH_RIDDLE_TAB">Wir sprechen den Wunsch des Wächters aus,&lt;br&gt;der das Ende eines Zeitalters bedeutet.&lt;br&gt;&lt;page&gt;Unter der Kapelle in der Hand der Monarchin.&lt;br&gt;Über dem Lager im Griff der schwarzen Fadenplage.&lt;page&gt;Neben der Flamme und den schwarz-verkohlten Schalen.&lt;br&gt;Drehende Türme hinauf, beim verschmähten Chirurgen.&lt;page&gt;Der Käfig des Wesens, das gegen die seidene Lüge aufbegehrte.&lt;br&gt;Ein frostiges Herz schwingt sich in die Höhe.&lt;page&gt;Vorbei am Gipfel, letzte Prüfung der Zähigkeit.&lt;br&gt;Damit die Zeiten vergehen, der Pilz als Zeuge.</entry>
+<entry name="HEART_OUTRO_ANT">... Wie wir jagten ... ... Wie wir sangen ... ... Meine Kinder, ich sah euch, ruhmreich ...</entry>
+<entry name="SILK_HEART_MEMORY_LACE_FINAL">... Aus unserer Seide ... Ein treu geborenes Kind ...</entry>
+<entry name="MR_MUSH_TAB_TALK">&lt;hpage&gt;Der Wächter besucht ebenfalls dieses Land.&lt;hpage&gt;Wenn er nun hier ist, ist ein großer Wandel oder ein wildes Ende unausweichlich. Nur das will er sehen.</entry>
+</entries>

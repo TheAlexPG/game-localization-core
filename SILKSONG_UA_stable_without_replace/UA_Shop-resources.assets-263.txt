@@ -1,4 +1,4 @@
-RU_Shop
+DE_Shop
 <entries>
 <entry name="THUNTER_ITEM_BLASTEDLANDS">Підточені ступені</entry>
 <entry name="THUNTER_ITEM_FIELDLANDS">Краї полів</entry>

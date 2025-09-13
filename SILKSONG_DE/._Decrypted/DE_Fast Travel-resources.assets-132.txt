@@ -1,0 +1,26 @@
+DE_Fast Travel
+<entries>
+<entry name="STATION_NAME_SHELLWOOD">Muschelwald</entry>
+<entry name="STATION_NAME_DOCKS">Tiefenkai</entry>
+<entry name="STATION_NAME_SHADOW">Gallwasser</entry>
+<entry name="TUBE_NAME_HANG">Hohe Hallen</entry>
+<entry name="TUBE_LIST_TITLE">VENTRICA</entry>
+<entry name="TUBE_NAME_SONG">Chorkammern</entry>
+<entry name="TUBE_NAME_HUB">Endstation</entry>
+<entry name="STATION_NAME_BONEFOREST_EAST">Weite Felder</entry>
+<entry name="STATION_NAME_WEAVE">Webnest</entry>
+<entry name="MAP_LIST_TITLE">GLOCKENWEGE</entry>
+<entry name="STATION_NAME_CITADEL">Großer Glockenweg</entry>
+<entry name="TUBE_NAME_CITYBELLWAY">Großer Glockenweg</entry>
+<entry name="STATION_NAME_BELLTOWN">Glockenherz</entry>
+<entry name="STATION_NAME_BONETOWN">Knochengrund</entry>
+<entry name="PAY_TOLL_MSG">Rosenkranzperlen einsetzen?</entry>
+<entry name="TUBE_NAME_ENCLAVE">Erster Schrein</entry>
+<entry name="STATION_NAME_PEAK">Der Brocken</entry>
+<entry name="STATION_NAME_AQUEDUCT">Verweste Aquädukte</entry>
+<entry name="TUBE_NAME_UNDER">Unterwerk</entry>
+<entry name="STATION_NAME_BONE">Tal der Knochen</entry>
+<entry name="STATION_NAME_CORAL_TOWER">Gesprengte Stufen</entry>
+<entry name="STATION_NAME_GREYMOOR">Graumoor</entry>
+<entry name="TUBE_NAME_ARBORIUM">Memorium</entry>
+</entries>

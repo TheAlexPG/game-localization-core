@@ -1,4 +1,4 @@
-RU_Fast Travel
+DE_Fast Travel
 <entries>
 <entry name="STATION_NAME_SHELLWOOD">Панцирний ліс</entry>
 <entry name="STATION_NAME_DOCKS">Глибокі доки</entry>

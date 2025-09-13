@@ -1,4 +1,4 @@
-RU_Journal
+DE_Journal
 <entries>
 <entry name="NOTE_CRYPT_WORM">Це гаденя діє мені на нерви. Воно ховається під кістками щоразу, коли я намагаюся його вдарити.</entry>
 <entry name="NAME_POND_SKATER">Прудопляс</entry>

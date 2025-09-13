@@ -1,4 +1,4 @@
-RU_Map Zones
+DE_Map Zones
 <entries>
 <entry name="BATHHOUSE">Купальні Citadel</entry>
 <entry name="BONETOWN_GRAVEYARD">Кістяний погост</entry>
