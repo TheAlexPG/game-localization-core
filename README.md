@@ -198,12 +198,13 @@ python scripts/encrypt_silksong.py "data/silksong/output/SILKSONG_UA"
 ## Конфігурація проектів
 
 ### Silksong
+
 ```python
 SILKSONG_CONFIG = ProjectConfig(
     name="silksong",
-    source_lang="English", 
+    source_lang="English",
     target_lang_code="DE",  # Замінюємо німецьку локалізацію
-    source_dir="./SILKSONG_EN/._Decrypted",
+    source_dir="games/Hollow-Knight-Silksong-UA-LOCALISATION/data/source/SILKSONG_EN/._Decrypted",
     output_dir="./data/silksong/output"
 )
 ```

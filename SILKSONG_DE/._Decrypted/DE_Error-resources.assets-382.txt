@@ -1,8 +1,0 @@
-DE_Error
-<entries>
-<entry name="OK">OK</entry>
-<entry name="SAVE_FAILED_DESC">Bitte erneut versuchen. Wenn das Problem weiterhin auftritt, erhältst du auf hollowknightsilksong.com/help weitere Infos.</entry>
-<entry name="SAVE_CORRUPTED_TITLE">Speicherstand konnte nicht geladen werden.</entry>
-<entry name="SAVE_CORRUPTED_DESC">Du kannst versuchen, mit der Option unten einen früheren automatischen Speicherstand wiederherzustellen.</entry>
-<entry name="SAVE_FAILED_TITLE">Speicherstand konnte nicht erstellt werden.</entry>
-</entries>
