@@ -1,0 +1,15 @@
+Local Model Structured Output Results
+========================================
+
+Extracted Terms:
+  - Mystic Forest
+  - Dragon of Wisdom
+  - Crystal of Power
+  - Lightning Bolt
+  - Magic Elixir
+  - Shadow Beast
+
+Translations:
+  Mystic Forest -> Таємничий Ліс
+  Dragon of Wisdom -> Дракон Мудрості
+  Crystal of Power -> Кришталь Сили

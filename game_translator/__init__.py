@@ -3,6 +3,8 @@
 from .core.models import TranslationEntry, TranslationStatus, ProjectConfig, ProgressStats
 from .core.project import TranslationProject
 from .core.tracking import VersionTracker
+from .core.translator import TranslationManager
+from .providers.base import BaseTranslationProvider
 
 __version__ = "1.0.0"
 
@@ -13,6 +15,8 @@ __all__ = [
     "ProjectConfig",
     "ProgressStats",
     "VersionTracker",
+    "TranslationManager",
+    "BaseTranslationProvider",
 ]
 
 # Convenience functions

@@ -1,0 +1,18 @@
+OpenAI Structured Output Results
+========================================
+
+Extracted Terms:
+  - Arthas
+  - Frostmourne
+  - Frozen Throne
+  - Ice Shard
+  - Greater Health Potion
+  - Lich King
+  - Shadowlands
+
+Translations:
+  Arthas -> Артас
+  Frostmourne -> Ледяна Смерть
+  Frozen Throne -> Заморожений Трон
+  Ice Shard -> Льодовий Кристал
+  Greater Health Potion -> Потужне Зілля Здоров'я

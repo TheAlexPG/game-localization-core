@@ -1,0 +1,30 @@
+Local Model Translation Examples (google/gemma-3-12b)
+============================================================
+
+1. Source: 'Play'
+   Translation: 'Грати'
+
+2. Source: 'Quit'
+   Translation: 'Вийти'
+
+3. Source: 'Settings'
+   Translation: 'Налаштування'
+
+4. Source: 'Health: {value}'
+   Translation: 'Здоров'я: {value}'
+
+5. Source: 'Level {level}'
+   Translation: 'Рівень {level}'
+
+6. Source: 'Welcome, adventurer!'
+   Translation: 'Ласкаво просимо, шукачу пригод!'
+
+7. Source: 'Are you sure?'
+   Translation: 'Ви впевнені?'
+
+8. Source: 'Iron Sword'
+   Translation: 'Залізний Меч'
+
+9. Source: 'Health Potion'
+   Translation: 'Зілля Здоров'я'
+

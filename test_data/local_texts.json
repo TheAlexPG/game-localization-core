@@ -1,0 +1,13 @@
+{
+  "menu.play": "Play",
+  "menu.quit": "Quit",
+  "menu.settings": "Settings",
+  "ui.health": "Health: {value}",
+  "ui.level": "Level {level}",
+  "dialog.welcome": "Welcome, adventurer!",
+  "dialog.confirm": "Are you sure?",
+  "item.sword": "Iron Sword",
+  "item.potion": "Health Potion",
+  "tech.empty": "",
+  "tech.number": "123"
+}

@@ -1,0 +1,17 @@
+{
+  "menu.play": "Play Game",
+  "menu.settings": "Settings",
+  "menu.options": "Options",
+  "menu.quit": "Quit",
+  "ui.health": "Health: {value}/100",
+  "ui.level": "Level {level}",
+  "dialog.welcome": "Welcome to the adventure!",
+  "dialog.confirm": "Are you sure you want to quit?",
+  "item.sword": "Iron Sword",
+  "item.potion": "Health Potion",
+  "location.forest": "Enchanted Forest",
+  "skill.fireball": "Fireball Spell",
+  "tech.empty": "",
+  "tech.number": "123",
+  "tech.tag": "<page=5>"
+}

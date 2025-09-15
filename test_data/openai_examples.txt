@@ -1,0 +1,27 @@
+OpenAI Translation Examples
+==================================================
+
+1. Source: 'New Game'
+   Translation: 'Нова гра'
+
+2. Source: 'Continue'
+   Translation: 'Продовжити'
+
+3. Source: 'Load Game'
+   Translation: 'Завантажити гру'
+
+4. Source: 'Settings'
+   Translation: 'Налаштування'
+
+5. Source: 'Quit Game'
+   Translation: 'Вийти з гри'
+
+6. Source: 'Health: {current}/{max}'
+   Translation: 'Здоров'я: {current}/{max}'
+
+7. Source: 'Mana: {current}/{max}'
+   Translation: 'Мана: {current}/{max}'
+
+8. Source: 'Level {level}'
+   Translation: 'Рівень {level}'
+
