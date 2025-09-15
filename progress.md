@@ -25,14 +25,14 @@ game-translator/
 
 ## Roadmap
 
-### Phase 1: Core Data Models (2 days) 🚧
-**Status**: In Progress
+### Phase 1: Core Data Models (2 days) ✅
+**Status**: Completed
 
-- [ ] Basic models (TranslationEntry, ProjectConfig)
-- [ ] Translation status enum
-- [ ] Hash calculation for change detection
-- [ ] Progress statistics
-- [ ] Metadata support
+- [x] Basic models (TranslationEntry, ProjectConfig)
+- [x] Translation status enum
+- [x] Hash calculation for change detection
+- [x] Progress statistics
+- [x] Metadata support
 
 **Key Features**:
 - Simple string keys (universal)
@@ -40,14 +40,14 @@ game-translator/
 - Two main statuses: pending/translated
 - Comments field for translators
 
-### Phase 2: Project Management (3 days) ⏳
-**Status**: Not Started
+### Phase 2: Project Management (3 days) ✅
+**Status**: Completed
 
-- [ ] TranslationProject class
-- [ ] State persistence (project.json)
-- [ ] Import/export coordination
-- [ ] Glossary management
-- [ ] Version snapshots
+- [x] TranslationProject class
+- [x] State persistence (project.json)
+- [x] Import/export coordination
+- [x] Glossary management
+- [x] Version snapshots
 
 **Key Features**:
 - Auto-save project state
@@ -125,19 +125,24 @@ game-translator/
 
 ## Current Sprint
 
-**Focus**: Phase 1 - Core Data Models
+**Focus**: Phase 3 - Import/Export System
 
 **Today's Tasks**:
-1. Create basic model classes
-2. Implement hash calculation
-3. Add status tracking
-4. Write unit tests
+1. Create base importer/exporter classes
+2. Implement JSON importer
+3. Add Excel exporter with formatting
+4. Create CSV exporter
 
 ## Completed Features ✅
 
 - Project structure created
 - README updated with new vision
 - Progress tracking initialized
+- Core data models (TranslationEntry, ProjectConfig, ProgressStats)
+- Project management (TranslationProject class)
+- Version tracking system (VersionTracker)
+- State persistence with project.json
+- Glossary management
 
 ## Tech Stack
 
@@ -169,8 +174,8 @@ game-translator/
 
 - **Total Phases**: 7
 - **Estimated Time**: 16 days
-- **Current Phase**: 1
-- **Progress**: 5%
+- **Current Phase**: 3
+- **Progress**: 30%
 
 ## Next Milestones
 
