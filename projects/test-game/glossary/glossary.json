@@ -1,0 +1,11 @@
+{
+  "project": "test-game",
+  "source_lang": "en",
+  "target_lang": "uk",
+  "terms_count": 3,
+  "translations": {
+    "Health": "Zdorovya",
+    "Settings": "Nalashtuvannia",
+    "Adventure": "Pryhoda"
+  }
+}

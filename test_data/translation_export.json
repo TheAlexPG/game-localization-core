@@ -1,0 +1,8 @@
+{
+  "menu.play": "Graty",
+  "menu.settings": "Nalashtuvannia",
+  "menu.quit": "Quit",
+  "dialog.confirm": "Vy vpevneni?",
+  "ui.health": "Health: {value}",
+  "story.intro": "Welcome to our adventure!"
+}

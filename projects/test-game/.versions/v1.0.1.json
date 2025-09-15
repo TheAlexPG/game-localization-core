@@ -1,0 +1,42 @@
+{
+  "version": "1.0.1",
+  "timestamp": "2025-09-15T23:14:08.336410",
+  "entries": {
+    "menu.play": {
+      "source_text": "Play Game",
+      "source_hash": "ef40a21681569c8f",
+      "translated_text": "Graty",
+      "status": "translated"
+    },
+    "menu.settings": {
+      "source_text": "Settings",
+      "source_hash": "74a883a037bc227f",
+      "translated_text": "Nalashtuvannia",
+      "status": "translated"
+    },
+    "menu.quit": {
+      "source_text": "Quit",
+      "source_hash": "b3eb37acb66ba4bb",
+      "translated_text": null,
+      "status": "pending"
+    },
+    "dialog.confirm": {
+      "source_text": "Are you sure?",
+      "source_hash": "f0762c4f3bfcd695",
+      "translated_text": "Vy vpevneni?",
+      "status": "translated"
+    },
+    "ui.health": {
+      "source_text": "Health: {value}",
+      "source_hash": "2f08494353dc20f4",
+      "translated_text": null,
+      "status": "pending"
+    },
+    "story.intro": {
+      "source_text": "Welcome to our adventure!",
+      "source_hash": "1b0ac870263f5456",
+      "translated_text": null,
+      "status": "pending"
+    }
+  }
+}

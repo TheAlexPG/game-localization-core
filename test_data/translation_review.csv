@@ -1,0 +1,7 @@
+Key,Context,Source,Translation,Status,Notes
+menu.play,,Play Game,Graty,translated,
+menu.settings,,Settings,Nalashtuvannia,translated,
+menu.quit,,Quit,,pending,
+dialog.confirm,,Are you sure?,Vy vpevneni?,translated,
+ui.health,,Health: {value},,pending,
+story.intro,,Welcome to our adventure!,,pending,

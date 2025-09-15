@@ -1,0 +1,8 @@
+{
+  "menu.play": "Play Game",
+  "menu.settings": "Settings",
+  "menu.quit": "Quit",
+  "dialog.confirm": "Are you sure?",
+  "ui.health": "Health: {value}",
+  "story.intro": "Welcome to our adventure!"
+}
