@@ -1,0 +1,4 @@
+name,pattern,description,enabled
+square_brackets,\[\w+\],Square bracket markers like [ACTION] [ITEM],true
+special_ids,"#\d{4,6}",Special ID numbers like #1234 #123456,true
+percentage_vars,%\w+%,Percentage variables like %PLAYER% %LEVEL%,false

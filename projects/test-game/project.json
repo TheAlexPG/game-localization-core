@@ -1,82 +1,10 @@
 {
-  "config": {
-    "name": "test-game",
-    "source_lang": "en",
-    "target_lang": "uk",
-    "source_format": "json",
-    "output_format": "json",
-    "glossary_path": "projects\\test-game\\glossary\\glossary.json",
-    "preserve_terms": [],
-    "metadata": {}
-  },
-  "version": "1.0.1",
-  "last_modified": "2025-09-15T23:14:08.354713",
-  "entries": {
-    "menu.play": {
-      "source_text": "Play Game",
-      "source_hash": "ef40a21681569c8f",
-      "translated_text": "Graty",
-      "status": "translated",
-      "context": null,
-      "file_path": "test_data\\sample.json",
-      "metadata": {},
-      "translator_notes": null,
-      "last_modified": "2025-09-15T23:13:41.760878"
-    },
-    "menu.settings": {
-      "source_text": "Settings",
-      "source_hash": "74a883a037bc227f",
-      "translated_text": "Nalashtuvannia",
-      "status": "translated",
-      "context": null,
-      "file_path": "test_data\\sample.json",
-      "metadata": {},
-      "translator_notes": null,
-      "last_modified": "2025-09-15T23:13:41.760878"
-    },
-    "menu.quit": {
-      "source_text": "Quit",
-      "source_hash": "b3eb37acb66ba4bb",
-      "translated_text": null,
-      "status": "pending",
-      "context": null,
-      "file_path": "test_data\\sample.json",
-      "metadata": {},
-      "translator_notes": null,
-      "last_modified": "2025-09-15T23:13:41.760878"
-    },
-    "dialog.confirm": {
-      "source_text": "Are you sure?",
-      "source_hash": "f0762c4f3bfcd695",
-      "translated_text": "Vy vpevneni?",
-      "status": "translated",
-      "context": null,
-      "file_path": "test_data\\sample.json",
-      "metadata": {},
-      "translator_notes": null,
-      "last_modified": "2025-09-15T23:13:41.760878"
-    },
-    "ui.health": {
-      "source_text": "Health: {value}",
-      "source_hash": "2f08494353dc20f4",
-      "translated_text": null,
-      "status": "pending",
-      "context": null,
-      "file_path": "test_data\\sample.json",
-      "metadata": {},
-      "translator_notes": null,
-      "last_modified": "2025-09-15T23:13:41.760878"
-    },
-    "story.intro": {
-      "source_text": "Welcome to our adventure!",
-      "source_hash": "1b0ac870263f5456",
-      "translated_text": null,
-      "status": "pending",
-      "context": null,
-      "file_path": "test_data\\sample.json",
-      "metadata": {},
-      "translator_notes": null,
-      "last_modified": "2025-09-15T23:13:41.760878"
-    }
-  }
+  "name": "test-game",
+  "source_lang": "en",
+  "target_lang": "uk",
+  "source_format": "json",
+  "output_format": "json",
+  "glossary_path": null,
+  "preserve_terms": [],
+  "metadata": {}
 }
