@@ -1,0 +1,11 @@
+name,pattern,description,enabled
+square_brackets,\[\w+\],"Square bracket markers like [ACTION] [ITEM] [FIRE]",true
+special_ids,#\d{4,6},"Special ID numbers like #1234 #123456",true
+percentage_vars,%\w+%,"Percentage variables like %PLAYER% %LEVEL%",true
+unity_refs,\{\{[^}]+\}\},"Unity text mesh references like {{inventory}} {{stats}}",true
+color_codes,\[color=#[0-9a-fA-F]{6}\],"Color codes like [color=#FF0000] [color=#00FF00]",false
+pipe_variables,\|[A-Z_]+\|,"Pipe variables like |HEALTH| |MANA| |EXPERIENCE|",false
+round_brackets,\([A-Z_]+\),"Round bracket markers like (REQUIRED) (OPTIONAL)",false
+at_mentions,@[a-zA-Z0-9_]+,"At mentions like @player @system @npc",false
+hash_tags,#[a-zA-Z_]+,"Hash tags like #quest #achievement #item",false
+double_brackets,\[\[[^\]]+\]\],"Double brackets like [[reference]] [[link]]",false

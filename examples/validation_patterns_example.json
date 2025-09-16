@@ -1,0 +1,108 @@
+{
+  "project_info": {
+    "name": "Example Game Localization",
+    "description": "Validation patterns for fantasy RPG game",
+    "version": "1.0.0"
+  },
+  "patterns": {
+    "square_brackets": {
+      "pattern": "\\[\\w+\\]",
+      "description": "Square bracket markers like [ACTION] [ITEM] [FIRE]",
+      "enabled": true,
+      "examples": ["[FIRE]", "[JUMP]", "[ACTION]", "[MENU]"]
+    },
+    "special_ids": {
+      "pattern": "#\\d{4,6}",
+      "description": "Special ID numbers for items, NPCs, quests",
+      "enabled": true,
+      "examples": ["#1234", "#56789", "#123456"]
+    },
+    "percentage_vars": {
+      "pattern": "%\\w+%",
+      "description": "Percentage variables for dynamic content",
+      "enabled": true,
+      "examples": ["%PLAYER%", "%LEVEL%", "%EXPERIENCE%", "%GOLD%"]
+    },
+    "unity_refs": {
+      "pattern": "\\{\\{[^}]+\\}\\}",
+      "description": "Unity TextMeshPro references",
+      "enabled": true,
+      "examples": ["{{inventory}}", "{{stats}}", "{{settings}}", "{{help}}"]
+    },
+    "color_codes": {
+      "pattern": "\\[color=#[0-9a-fA-F]{6}\\]",
+      "description": "Rich text color codes",
+      "enabled": false,
+      "examples": ["[color=#FF0000]", "[color=#00FF00]", "[color=#0000FF]"]
+    },
+    "pipe_variables": {
+      "pattern": "\\|[A-Z_]+\\|",
+      "description": "Pipe-delimited variables",
+      "enabled": false,
+      "examples": ["|HEALTH|", "|MANA|", "|EXPERIENCE|", "|INVENTORY_COUNT|"]
+    },
+    "round_brackets": {
+      "pattern": "\\([A-Z_]+\\)",
+      "description": "Round bracket markers for UI elements",
+      "enabled": false,
+      "examples": ["(REQUIRED)", "(OPTIONAL)", "(LOCKED)", "(AVAILABLE)"]
+    },
+    "at_mentions": {
+      "pattern": "@[a-zA-Z0-9_]+",
+      "description": "At-mentions for players or system references",
+      "enabled": false,
+      "examples": ["@player", "@system", "@npc", "@admin"]
+    },
+    "hash_tags": {
+      "pattern": "#[a-zA-Z_]+",
+      "description": "Hash tags for categories or keywords (not numeric IDs)",
+      "enabled": false,
+      "examples": ["#quest", "#achievement", "#item", "#skill"]
+    },
+    "double_brackets": {
+      "pattern": "\\[\\[[^\\]]+\\]\\]",
+      "description": "Double brackets for wiki-style references",
+      "enabled": false,
+      "examples": ["[[reference]]", "[[link]]", "[[tooltip]]", "[[help]]"]
+    }
+  },
+  "validation_settings": {
+    "strict_mode": false,
+    "check_technical_terms": true,
+    "allow_unchanged_technical": true,
+    "quality_threshold": 80
+  },
+  "examples": {
+    "good_translations": [
+      {
+        "source": "Press [FIRE] to attack enemy #1234",
+        "translation": "Натисніть [FIRE] для атаки на ворога #1234",
+        "note": "All patterns preserved correctly"
+      },
+      {
+        "source": "Welcome %PLAYER% to level %CURRENT_LEVEL%!",
+        "translation": "Ласкаво просимо %PLAYER% на рівень %CURRENT_LEVEL%!",
+        "note": "Percentage variables maintained"
+      },
+      {
+        "source": "Check {{inventory}} and {{stats}} screens",
+        "translation": "Перевірте екрани {{inventory}} та {{stats}}",
+        "note": "Unity references preserved"
+      }
+    ],
+    "bad_translations": [
+      {
+        "source": "Use [ACTION] button and item #5678",
+        "translation": "Використовуйте кнопку дії та предмет",
+        "note": "Missing [ACTION] marker and #5678 ID",
+        "errors": ["Missing [ACTION]", "Missing #5678"]
+      },
+      {
+        "source": "Hello %PLAYER%, your %STAT% is low",
+        "translation": "Привіт гравцю, ваша характеристика низька",
+        "note": "Both percentage variables removed",
+        "errors": ["Missing %PLAYER%", "Missing %STAT%"]
+      }
+    ]
+  }
+}

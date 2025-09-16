@@ -83,30 +83,56 @@ class ValidationResult:
 class TranslationValidator:
     """Validates translation quality and consistency"""
 
-    def __init__(self, strict_mode: bool = False):
+    def __init__(self, strict_mode: bool = False, custom_patterns: Optional[Dict[str, str]] = None):
         """
         Initialize validator
 
         Args:
             strict_mode: If True, more checks are performed as errors instead of warnings
+            custom_patterns: Dict of custom regex patterns {name: pattern}
         """
         self.strict_mode = strict_mode
 
-        # Patterns for validation
-        # Regular placeholders: {placeholder}
-        self.placeholder_pattern = re.compile(r'\{[^}]+\}')
+        # Standard patterns for validation
+        self.standard_patterns = {
+            "placeholder": r'\{[^}]+\}',           # {placeholder}
+            "system_variable": r'\$[^$]+\$',       # $variable$
+            "html_tag": r'<[^>]+>',                # <tag>
+            "html_entity": r'&[a-zA-Z0-9#]+;'     # &entity;
+        }
 
-        # Game-specific placeholders: {20204,5101}
-        self.game_id_pattern = re.compile(r'\{\d+,\d+\}')
+        # Compile standard patterns
+        self.compiled_patterns = {}
+        for name, pattern in self.standard_patterns.items():
+            self.compiled_patterns[name] = re.compile(pattern)
 
-        # System variables: $anything$ (flexible content)
-        self.system_var_pattern = re.compile(r'\$[^$]+\$')
+        # Add custom patterns if provided
+        self.custom_patterns = {}
+        if custom_patterns:
+            for name, pattern in custom_patterns.items():
+                try:
+                    self.compiled_patterns[f"custom_{name}"] = re.compile(pattern)
+                    # Store pattern info for descriptions
+                    self.custom_patterns[name] = {
+                        "pattern": pattern,
+                        "description": f"Custom pattern: {name}"
+                    }
+                except re.error as e:
+                    print(f"Warning: Invalid custom pattern '{name}': {pattern} - {e}")
 
-        # HTML/XML tags: <tag> and <tag attr="value">
-        self.html_tag_pattern = re.compile(r'<[^>]+>')
-
-        # HTML entities: &lt; &gt; &#8217; &amp;
-        self.html_entity_pattern = re.compile(r'&[a-zA-Z0-9#]+;')
+    def add_custom_pattern(self, name: str, pattern: str, description: str = ""):
+        """Add a custom validation pattern at runtime"""
+        try:
+            compiled_pattern = re.compile(pattern)
+            self.compiled_patterns[f"custom_{name}"] = compiled_pattern
+            self.custom_patterns[name] = {
+                "pattern": pattern,
+                "description": description
+            }
+            return True
+        except re.error as e:
+            print(f"Error adding custom pattern '{name}': {e}")
+            return False
 
     def validate_entry(self, entry: TranslationEntry) -> ValidationResult:
         """Validate single translation entry"""
@@ -160,17 +186,23 @@ class TranslationValidator:
     def _check_placeholders(self, entry: TranslationEntry, result: ValidationResult):
         """Check all types of placeholders and variables consistency"""
 
-        # 1. Regular placeholders: {placeholder}
-        self._check_placeholder_type(entry, result, self.placeholder_pattern,
-                                   "placeholder", "Regular placeholders")
+        # Check all patterns (standard + custom)
+        pattern_descriptions = {
+            "placeholder": "Regular placeholders",
+            "system_variable": "System variables",
+            "html_entity": "HTML entities"
+        }
 
-        # 2. System variables: $INPUT_ACTION$
-        self._check_placeholder_type(entry, result, self.system_var_pattern,
-                                   "system_variable", "System variables")
+        # Add descriptions for custom patterns
+        for name, info in self.custom_patterns.items():
+            pattern_descriptions[f"custom_{name}"] = info.get("description", f"Custom pattern: {name}")
 
-        # 3. HTML entities: &lt; &gt; &#8217;
-        self._check_placeholder_type(entry, result, self.html_entity_pattern,
-                                   "html_entity", "HTML entities")
+        # Check each pattern type
+        for pattern_name, compiled_pattern in self.compiled_patterns.items():
+            if pattern_name != "html_tag":  # HTML tags handled separately
+                description = pattern_descriptions.get(pattern_name, pattern_name)
+                self._check_placeholder_type(entry, result, compiled_pattern,
+                                           pattern_name, description)
 
     def _check_placeholder_type(self, entry: TranslationEntry, result: ValidationResult,
                               pattern: re.Pattern, error_type: str, description: str):
@@ -198,20 +230,22 @@ class TranslationValidator:
 
     def _check_tags(self, entry: TranslationEntry, result: ValidationResult):
         """Check HTML/XML tag consistency"""
-        source_tags = self.html_tag_pattern.findall(entry.source_text)
-        trans_tags = self.html_tag_pattern.findall(entry.translated_text)
+        if "html_tag" in self.compiled_patterns:
+            html_tag_pattern = self.compiled_patterns["html_tag"]
+            source_tags = html_tag_pattern.findall(entry.source_text)
+            trans_tags = html_tag_pattern.findall(entry.translated_text)
 
-        # Normalize tags for comparison (remove attributes, focus on tag names)
-        def normalize_tag(tag):
-            return re.sub(r'<(\w+)[^>]*>', r'<\1>', tag)
+            # Normalize tags for comparison (remove attributes, focus on tag names)
+            def normalize_tag(tag):
+                return re.sub(r'<(\w+)[^>]*>', r'<\1>', tag)
 
-        source_normalized = [normalize_tag(tag) for tag in source_tags]
-        trans_normalized = [normalize_tag(tag) for tag in trans_tags]
+            source_normalized = [normalize_tag(tag) for tag in source_tags]
+            trans_normalized = [normalize_tag(tag) for tag in trans_tags]
 
-        if source_normalized != trans_normalized:
-            result.add_issue(entry.key, "tag_mismatch",
-                           f"HTML/XML tags don't match. Source: {source_tags}, Translation: {trans_tags}",
-                           f"Expected tags: {', '.join(source_tags)}")
+            if source_normalized != trans_normalized:
+                result.add_issue(entry.key, "html_tag_mismatch",
+                               f"HTML/XML tags don't match. Source: {source_tags}, Translation: {trans_tags}",
+                               f"Expected tags: {', '.join(source_tags)}")
 
 
     def validate_project(self, project) -> ValidationResult:

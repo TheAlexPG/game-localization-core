@@ -1,0 +1,6 @@
+name,pattern,description,enabled
+square_brackets,\[\w+\],"Square bracket markers like [ACTION] [ITEM]",true
+special_ids,#\d{4-6},"Special ID numbers like #1234",true
+percentage_vars,%\w+%,"Percentage variables like %PLAYER%",true
+color_codes,\[color=#[0-9a-fA-F]{6}\],"Color codes like [color=#FF0000]",false
+unity_refs,\{\{[^}]+\}\},"Unity references like {{ref}}",true
