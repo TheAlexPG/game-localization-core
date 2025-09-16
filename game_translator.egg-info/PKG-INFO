@@ -1,0 +1,191 @@
+Metadata-Version: 2.4
+Name: game-translator
+Version: 1.0.0
+Summary: AI-powered game localization tool with translation validation and quality control
+Home-page: https://github.com/oleksandr-basiuk/game-translator
+Author: Oleksandr Basiuk
+Author-email: oleksandr.basiuk@example.com
+License: MIT
+Project-URL: Bug Reports, https://github.com/oleksandr-basiuk/game-translator/issues
+Project-URL: Source, https://github.com/oleksandr-basiuk/game-translator
+Project-URL: Documentation, https://github.com/oleksandr-basiuk/game-translator/blob/main/docs/
+Keywords: game,localization,translation,ai,openai,gpt,validation,quality,i18n,l10n,gamedev,unity,unreal,godot,cli,automation
+Platform: any
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: Intended Audience :: Other Audience
+Classifier: Topic :: Games/Entertainment
+Classifier: Topic :: Software Development :: Internationalization
+Classifier: Topic :: Software Development :: Localization
+Classifier: Topic :: Text Processing :: Linguistic
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Natural Language :: English
+Classifier: Natural Language :: Ukrainian
+Classifier: Natural Language :: Spanish
+Classifier: Natural Language :: French
+Classifier: Natural Language :: German
+Classifier: Natural Language :: Russian
+Classifier: Environment :: Console
+Classifier: Environment :: Web Environment
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: click>=8.0.0
+Requires-Dist: rich>=10.0.0
+Requires-Dist: requests>=2.25.0
+Requires-Dist: python-dotenv>=0.19.0
+Provides-Extra: openai
+Requires-Dist: openai>=1.0.0; extra == "openai"
+Provides-Extra: excel
+Requires-Dist: openpyxl>=3.0.0; extra == "excel"
+Provides-Extra: dev
+Requires-Dist: pytest>=6.0.0; extra == "dev"
+Requires-Dist: black>=22.0.0; extra == "dev"
+Requires-Dist: flake8>=4.0.0; extra == "dev"
+Requires-Dist: mypy>=0.950; extra == "dev"
+Requires-Dist: pytest-cov>=3.0.0; extra == "dev"
+Provides-Extra: docs
+Requires-Dist: sphinx>=4.0.0; extra == "docs"
+Requires-Dist: sphinx-rtd-theme>=1.0.0; extra == "docs"
+Requires-Dist: myst-parser>=0.17.0; extra == "docs"
+Provides-Extra: all
+Requires-Dist: openai>=1.0.0; extra == "all"
+Requires-Dist: openpyxl>=3.0.0; extra == "all"
+Dynamic: author
+Dynamic: author-email
+Dynamic: classifier
+Dynamic: description
+Dynamic: description-content-type
+Dynamic: home-page
+Dynamic: keywords
+Dynamic: license
+Dynamic: license-file
+Dynamic: platform
+Dynamic: project-url
+Dynamic: provides-extra
+Dynamic: requires-dist
+Dynamic: requires-python
+Dynamic: summary
+
+# Game Translator 🎮🌍
+
+AI-powered universal game localization system with versioning and collaborative workflow.
+
+## Features
+
+- **Universal Format**: Key-value based system works with any game
+- **Version Control**: Track changes between game versions
+- **Translation Status**: Monitor progress with clear status tracking
+- **Collaborative Workflow**: Export to Excel/CSV for translators
+- **AI Integration**: Support for OpenAI, DeepSeek, and local models
+- **Validation System**: Automatic quality checks for translations
+- **Glossary Management**: Consistent terminology across translations
+
+## Quick Start
+
+### Installation
+
+```bash
+pip install -e .
+```
+
+### Command Line Usage
+
+```bash
+# Initialize new project
+game-translator init --name my-game --source-lang en --target-lang uk
+
+# Import source files
+game-translator import --project my-game --files "./source/*.json"
+
+# Export for translators
+game-translator export --project my-game --format excel
+
+# Translate with AI
+game-translator translate --project my-game --provider openai --model gpt-4
+
+# Validate translations
+game-translator validate --project my-game
+```
+
+### Python Library Usage
+
+```python
+from game_translator import TranslationProject
+
+# Create project
+project = TranslationProject("my-game", source_lang="en", target_lang="uk")
+
+# Import source files
+project.import_source(["./game/texts.json"])
+
+# Export for review
+project.export_table("translations.xlsx")
+
+# Get statistics
+stats = project.get_progress_stats()
+print(f"Completion: {stats.completion_rate}%")
+```
+
+## Project Structure
+
+```
+my-game-project/
+├── data/               # Source data storage
+├── output/            # Translated files
+├── glossary/          # Terminology management
+├── .versions/         # Version snapshots
+└── project.json       # Project state
+```
+
+## Data Format
+
+The system uses a universal key-value format:
+
+```json
+{
+  "menu.play": "Play Game",
+  "menu.settings": "Settings",
+  "dialog.confirm": "Are you sure?"
+}
+```
+
+Each entry tracks:
+- **Key**: Unique identifier
+- **Source Text**: Original text
+- **Translation**: Translated text
+- **Status**: pending/translated
+- **Hash**: For change detection
+- **Context**: Additional information
+- **Notes**: Translator comments
+
+## Translation Workflow
+
+1. **Import**: Convert game files to key-value format
+2. **Extract Terms**: Build glossary of important terms
+3. **Translate**: Use AI or export for manual translation
+4. **Validate**: Automatic quality checks
+5. **Export**: Convert back to game format
+
+## Supported Formats
+
+- JSON (native)
+- CSV
+- Excel (with formatting)
+- XML (planned)
+- Unity (planned)
+
+## Development
+
+See [progress.md](progress.md) for development roadmap and current status.
+
+## License
+
+MIT

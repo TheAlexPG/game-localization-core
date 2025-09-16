@@ -1,4 +1,7 @@
-openai>=1.0.0
-requests>=2.28.0
+# Core dependencies for Game Translator
+click>=8.0.0
+rich>=10.0.0
+requests>=2.25.0
 python-dotenv>=0.19.0
-pathlib
+openai>=1.0.0
+openpyxl>=3.0.0

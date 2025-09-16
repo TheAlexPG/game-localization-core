@@ -1,0 +1,3 @@
+[console_scripts]
+game-translator = game_translator_cli.main:cli
+gt = game_translator_cli.main:cli
