@@ -323,8 +323,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Oleksandr Basiuk**
 
-- GitHub: [@oleksandr-basiuk](https://github.com/oleksandr-basiuk)
-- Email: oleksandr.basiuk@example.com
+- GitHub: [@oleksandr-basiuk](https://github.com/TheAlexPG)
+- Email: alexpremiumgame@gmail.com
 
 ## 🙏 Acknowledgments
 
