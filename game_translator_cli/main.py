@@ -482,6 +482,180 @@ def _get_project_path(project: str) -> Path:
         return Path("projects") / project
 
 
+@cli.group()
+@click.pass_context
+def context(ctx):
+    """Manage project and glossary context for better translations
+
+    Context helps AI understand your game better:
+    - Project context: General game information, tone, style
+    - Glossary context: Instructions for term extraction and translation
+    """
+    pass
+
+
+@context.command('set')
+@click.option('--project', '-p', required=True, help='Project name or path')
+@click.option('--type', '-t',
+              type=click.Choice(['project', 'glossary'], case_sensitive=False),
+              default='project',
+              help='Context type to set')
+@click.option('--file', '-f', help='Path to context file (markdown/text/json)')
+@click.option('--json', '-j', 'json_data', help='JSON string with context data')
+@click.pass_context
+def context_set(ctx, project, type, file, json_data):
+    """Set context from file or JSON data
+
+    Examples:
+        # Set from markdown file
+        game-translator context set -p my-game --file game_info.md
+
+        # Set from JSON
+        game-translator context set -p my-game --json '{"genre": "RPG", "tone": "epic"}'
+
+        # Set glossary context
+        game-translator context set -p my-game --type glossary --file glossary_rules.md
+    """
+    from game_translator import TranslationProject
+
+    try:
+        # Load project
+        project_obj = TranslationProject.load(project)
+
+        if file:
+            # Set from file
+            if type == 'project':
+                project_obj.set_project_context(from_file=file)
+                click.echo(f"Project context set from {file}")
+            else:
+                project_obj.set_glossary_context(from_file=file)
+                click.echo(f"Glossary context set from {file}")
+
+        elif json_data:
+            # Parse JSON and set
+            import json as json_module
+            context_dict = json_module.loads(json_data)
+
+            if type == 'project':
+                project_obj.set_project_context(context=context_dict)
+                click.echo(f"Project context updated with {len(context_dict)} properties")
+            else:
+                project_obj.set_glossary_context(context=context_dict)
+                click.echo(f"Glossary context updated with {len(context_dict)} properties")
+        else:
+            click.echo("Error: Provide either --file or --json", err=True)
+
+    except Exception as e:
+        click.echo(f"Error: {e}", err=True)
+
+
+@context.command('add')
+@click.option('--project', '-p', required=True, help='Project name or path')
+@click.option('--type', '-t',
+              type=click.Choice(['project', 'glossary'], case_sensitive=False),
+              default='project',
+              help='Context type to add to')
+@click.option('--key', '-k', required=True, help='Property key')
+@click.option('--value', '-v', required=True, help='Property value')
+@click.pass_context
+def context_add(ctx, project, type, key, value):
+    """Add single context property
+
+    Examples:
+        # Add project context property
+        game-translator context add -p my-game --key genre --value "Dark Fantasy"
+
+        # Add glossary context property
+        game-translator context add -p my-game --type glossary --key extract_npcs --value true
+    """
+    from game_translator import TranslationProject
+
+    try:
+        project_obj = TranslationProject.load(project)
+
+        if type == 'project':
+            project_obj.add_project_context(key, value)
+            click.echo(f"Added to project context: {key}={value}")
+        else:
+            project_obj.add_glossary_context(key, value)
+            click.echo(f"Added to glossary context: {key}={value}")
+
+    except Exception as e:
+        click.echo(f"Error: {e}", err=True)
+
+
+@context.command('show')
+@click.option('--project', '-p', required=True, help='Project name or path')
+@click.option('--type', '-t',
+              type=click.Choice(['project', 'glossary', 'all'], case_sensitive=False),
+              default='all',
+              help='Context type to show')
+@click.pass_context
+def context_show(ctx, project, type):
+    """Display current context
+
+    Examples:
+        # Show all context
+        game-translator context show -p my-game
+
+        # Show only project context
+        game-translator context show -p my-game --type project
+    """
+    from game_translator import TranslationProject
+
+    try:
+        project_obj = TranslationProject.load(project)
+
+        if HAS_RICH:
+            from rich.console import Console
+            from rich.panel import Panel
+            from rich.syntax import Syntax
+            console = Console()
+
+            if type in ['project', 'all']:
+                proj_ctx = project_obj.get_project_context()
+                if proj_ctx:
+                    content = project_obj.format_context_for_prompt('project')
+                    if content:
+                        panel = Panel(content, title="[bold blue]Project Context[/bold blue]", border_style="blue")
+                        console.print(panel)
+                    else:
+                        console.print("[yellow]No project context set[/yellow]")
+                else:
+                    console.print("[yellow]No project context set[/yellow]")
+
+            if type in ['glossary', 'all']:
+                gloss_ctx = project_obj.get_glossary_context()
+                if gloss_ctx:
+                    content = project_obj.format_context_for_prompt('glossary')
+                    if content:
+                        panel = Panel(content, title="[bold green]Glossary Context[/bold green]", border_style="green")
+                        console.print(panel)
+                    else:
+                        console.print("[yellow]No glossary context set[/yellow]")
+                else:
+                    console.print("[yellow]No glossary context set[/yellow]")
+        else:
+            if type in ['project', 'all']:
+                proj_ctx = project_obj.get_project_context()
+                if proj_ctx:
+                    click.echo("\n=== PROJECT CONTEXT ===")
+                    click.echo(project_obj.format_context_for_prompt('project'))
+                else:
+                    click.echo("No project context set")
+
+            if type in ['glossary', 'all']:
+                gloss_ctx = project_obj.get_glossary_context()
+                if gloss_ctx:
+                    click.echo("\n=== GLOSSARY CONTEXT ===")
+                    click.echo(project_obj.format_context_for_prompt('glossary'))
+                else:
+                    click.echo("No glossary context set")
+
+    except Exception as e:
+        click.echo(f"Error: {e}", err=True)
+
+
 def _load_project_config(proj_path: Path) -> Optional[ProjectConfig]:
     """Load project configuration"""
     config_file = proj_path / "project.json"

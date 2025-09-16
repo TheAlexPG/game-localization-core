@@ -73,6 +73,9 @@ class ProjectConfig:
     glossary_path: Optional[str] = None
     preserve_terms: list = field(default_factory=list)
     metadata: Dict[str, Any] = field(default_factory=dict)
+    # Context for better translations
+    project_context: Dict[str, Any] = field(default_factory=dict)  # General project context
+    glossary_context: Dict[str, Any] = field(default_factory=dict)  # Context for glossary extraction
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary"""
@@ -84,7 +87,9 @@ class ProjectConfig:
             "output_format": self.output_format,
             "glossary_path": self.glossary_path,
             "preserve_terms": self.preserve_terms,
-            "metadata": self.metadata
+            "metadata": self.metadata,
+            "project_context": self.project_context,
+            "glossary_context": self.glossary_context
         }
 
     @classmethod
@@ -98,7 +103,9 @@ class ProjectConfig:
             output_format=data.get("output_format", "json"),
             glossary_path=data.get("glossary_path"),
             preserve_terms=data.get("preserve_terms", []),
-            metadata=data.get("metadata", {})
+            metadata=data.get("metadata", {}),
+            project_context=data.get("project_context", {}),
+            glossary_context=data.get("glossary_context", {})
         )
 
 

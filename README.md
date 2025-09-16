@@ -17,6 +17,7 @@ AI-powered universal game localization system with validation and quality contro
 - **🌐 Multi-Provider**: Single interface for multiple AI providers
 - **💾 Version Control**: Track changes between game versions
 - **📚 Glossary Management**: Consistent terminology across translations
+- **🎯 Context System**: Project and glossary context for better AI understanding
 
 ### Validation Features
 - Empty translation detection
@@ -27,6 +28,13 @@ AI-powered universal game localization system with validation and quality contro
 - HTML entities checking (`&nbsp;`, `&#8212;`)
 - System variables (`$test$`, `#ID#`)
 - Length ratio warnings
+
+### Context System
+- **Project Context**: Game genre, tone, audience, special instructions
+- **Glossary Context**: Term extraction rules and translation guidelines
+- **File Support**: Markdown, JSON, or inline text
+- **Auto-Detection**: Automatic loading of PROJECT_CONTEXT.md and GLOSSARY_CONTEXT.md
+- **CLI Management**: Easy context setup and viewing
 
 ## 📦 Installation
 
@@ -62,10 +70,13 @@ pip install -e .[dev]
 # Initialize new project
 game-translator init --name "my-game" --target-lang "uk"
 
+# Set up context for better translations
+game-translator context set --project "my-game" --json '{"genre": "RPG", "tone": "epic"}'
+
 # Create validation patterns template
 game-translator create-patterns --template excel
 
-# Translate with AI
+# Translate with AI (context automatically included)
 game-translator translate --project "my-game" --provider openai --api-key "sk-..."
 
 # Validate translations
@@ -87,13 +98,20 @@ from game_translator import (
 # Create project
 project = create_project("my-game", "en", "uk")
 
+# Set up context for better translations
+project.set_project_context({
+    "genre": "Dark Fantasy RPG",
+    "tone": "epic and serious",
+    "audience": "adults 18-30"
+})
+
 # Import source files
 project.import_source("source.json")
 
 # Setup AI provider
 provider = get_provider("openai", api_key="sk-...")
 
-# Translate
+# Translate (context automatically included)
 manager = project.translate_all(provider)
 
 # Validate
@@ -132,6 +150,62 @@ input_actions,INPUT_ACTION_\w+,Input action constants,true
 Or use Excel template:
 ```bash
 game-translator create-patterns --template excel --output "my_patterns.xlsx"
+```
+
+### Project Context
+
+Context helps AI understand your game better for more accurate translations.
+
+**Set up context via CLI:**
+```bash
+# From JSON
+game-translator context set --project "my-game" --json '{"genre": "Fantasy RPG", "tone": "epic"}'
+
+# From file
+game-translator context set --project "my-game" --file "PROJECT_CONTEXT.md"
+
+# View context
+game-translator context show --project "my-game"
+```
+
+**Context file example:**
+```markdown
+# PROJECT_CONTEXT.md
+
+## Genre
+Dark Fantasy RPG with Souls-like elements
+
+## Target Audience
+Hardcore gamers (18-35), fantasy enthusiasts
+
+## Tone
+- Dark and atmospheric
+- Epic boss encounters
+- Melancholic storytelling
+
+## Special Instructions
+- Keep all [ITEM_] tags unchanged
+- Character names should sound ancient
+- Use formal language for lore texts
+```
+
+**Python API:**
+```python
+# Set context programmatically
+project.set_project_context({
+    "genre": "RPG",
+    "tone": "dark",
+    "preserve_ids": True
+})
+
+# From file
+project.set_project_context(from_file="game_context.md")
+
+# Set glossary context
+project.set_glossary_context({
+    "extract_npcs": True,
+    "keep_locations": False
+})
 ```
 
 ## 📚 Documentation

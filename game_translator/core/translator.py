@@ -114,13 +114,16 @@ class TranslationManager:
                 source_lang = self.project.config.source_lang
                 target_lang = self.project.config.target_lang
 
+                # Get project context for better translations
+                project_context = self.project.format_context_for_prompt("project")
+
                 # Get translations from provider
                 translations = self.provider.translate_texts(
                     texts=texts,
                     source_lang=source_lang,
                     target_lang=target_lang,
                     glossary=self.project.glossary,
-                    context=f"Game: {self.project.config.name}"
+                    context=project_context or f"Game: {self.project.config.name}"
                 )
 
                 # Update entries with translations

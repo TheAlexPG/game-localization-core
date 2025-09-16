@@ -283,3 +283,126 @@ class TranslationProject:
 
         # Load glossary if exists
         self.load_glossary()
+
+    # Context management methods
+    def set_project_context(self, context: Dict[str, Any] = None, from_file: str = None):
+        """Set general project context for better translations
+
+        Args:
+            context: Dictionary with context information
+            from_file: Path to file with context (markdown or text)
+        """
+        if from_file:
+            context_path = Path(from_file)
+            if not context_path.exists():
+                # Try relative to project dir
+                context_path = self.project_dir / from_file
+
+            if context_path.exists():
+                with open(context_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                    # If it's a dict-like file (JSON), parse it
+                    if from_file.endswith('.json'):
+                        self.config.project_context = json.loads(content)
+                    else:
+                        # Store as text content
+                        self.config.project_context["content"] = content
+                        self.config.project_context["file"] = str(context_path)
+        elif context:
+            self.config.project_context.update(context)
+
+        # Check for default PROJECT_CONTEXT.md
+        default_context = self.project_dir / "PROJECT_CONTEXT.md"
+        if default_context.exists() and not self.config.project_context.get("content"):
+            with open(default_context, 'r', encoding='utf-8') as f:
+                self.config.project_context["content"] = f.read()
+                self.config.project_context["file"] = str(default_context)
+
+        self._save_project_state()
+
+    def add_project_context(self, key: str, value: Any):
+        """Add single context property"""
+        self.config.project_context[key] = value
+        self._save_project_state()
+
+    def get_project_context(self) -> Dict[str, Any]:
+        """Get current project context"""
+        return self.config.project_context
+
+    def set_glossary_context(self, context: Dict[str, Any] = None, from_file: str = None):
+        """Set context for glossary extraction and translation
+
+        Args:
+            context: Dictionary with glossary-specific instructions
+            from_file: Path to file with glossary context
+        """
+        if from_file:
+            context_path = Path(from_file)
+            if not context_path.exists():
+                context_path = self.project_dir / from_file
+
+            if context_path.exists():
+                with open(context_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                    if from_file.endswith('.json'):
+                        self.config.glossary_context = json.loads(content)
+                    else:
+                        self.config.glossary_context["content"] = content
+                        self.config.glossary_context["file"] = str(context_path)
+        elif context:
+            self.config.glossary_context.update(context)
+
+        # Check for default GLOSSARY_CONTEXT.md
+        default_glossary = self.project_dir / "GLOSSARY_CONTEXT.md"
+        if default_glossary.exists() and not self.config.glossary_context.get("content"):
+            with open(default_glossary, 'r', encoding='utf-8') as f:
+                self.config.glossary_context["content"] = f.read()
+                self.config.glossary_context["file"] = str(default_glossary)
+
+        self._save_project_state()
+
+    def add_glossary_context(self, key: str, value: Any):
+        """Add single glossary context property"""
+        self.config.glossary_context[key] = value
+        self._save_project_state()
+
+    def get_glossary_context(self) -> Dict[str, Any]:
+        """Get current glossary context"""
+        return self.config.glossary_context
+
+    def format_context_for_prompt(self, context_type: str = "project") -> str:
+        """Format context for inclusion in AI prompt
+
+        Args:
+            context_type: "project" or "glossary"
+
+        Returns:
+            Formatted context string for prompt
+        """
+        context = self.config.project_context if context_type == "project" else self.config.glossary_context
+
+        if not context:
+            return ""
+
+        lines = []
+
+        # Add file content if present
+        if "content" in context:
+            lines.append(f"=== {context_type.upper()} CONTEXT ===")
+            lines.append(context["content"])
+            lines.append("")
+
+        # Add individual properties
+        skip_keys = {"content", "file"}
+        properties = {k: v for k, v in context.items() if k not in skip_keys}
+
+        if properties:
+            if not lines:  # No content, add header
+                lines.append(f"=== {context_type.upper()} CONTEXT ===")
+
+            for key, value in properties.items():
+                # Format key nicely
+                formatted_key = key.replace('_', ' ').title()
+                lines.append(f"{formatted_key}: {value}")
+
+        return "\n".join(lines) if lines else ""

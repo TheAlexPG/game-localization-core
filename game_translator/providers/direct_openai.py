@@ -97,8 +97,10 @@ CRITICAL FORMATTING RULES:
 
 """
 
+        # Add project context if provided
         if context:
-            prompt += f"Context: {context}\n\n"
+            # Context can be a simple string or formatted context from project
+            prompt += f"{context}\n\n"
 
         if glossary:
             prompt += "Use these consistent translations for specific terms:\n"
@@ -182,9 +184,15 @@ Do NOT include: common words, generic gaming terms, UI text, numbers
 Text to analyze:
 {text}
 
-Context: {context or "Game localization"}
+"""
 
-Return a JSON object with extracted terms."""
+        # Add glossary context if provided
+        if context:
+            prompt += f"{context}\n\n"
+        else:
+            prompt += "Context: Game localization\n\n"
+
+        prompt += "Return a JSON object with extracted terms."
 
         schema = {
             "name": "term_extraction",

@@ -24,6 +24,7 @@ Available commands:
 - `validate` - Check translation quality and consistency
 - `status` - Show project statistics
 - `create-patterns` - Generate custom validation pattern templates
+- `context` - Manage project and glossary context for better translations
 
 ## Command Reference
 
@@ -219,6 +220,113 @@ special_ids,#\d{4,6},"Special ID numbers like #1234",true
 percentage_vars,%\w+%,"Percentage variables like %PLAYER%",true
 ```
 
+### 6. Manage Context
+
+Set additional context information to help AI understand your game better and provide more accurate translations.
+
+```bash
+python cli.py context --help
+```
+
+Context has two types:
+- **Project Context**: General game information (genre, tone, audience)
+- **Glossary Context**: Instructions for term extraction and translation
+
+#### Set Context from File
+
+**Set project context:**
+```bash
+python cli.py context set --project "my-game" --file "game_info.md"
+```
+
+**Set glossary context:**
+```bash
+python cli.py context set --project "my-game" --type glossary --file "glossary_rules.md"
+```
+
+#### Set Context with JSON
+
+**Project context:**
+```bash
+python cli.py context set --project "my-game" --json '{"genre": "Dark Fantasy RPG", "tone": "epic and serious", "audience": "adults 18-30"}'
+```
+
+**Glossary context:**
+```bash
+python cli.py context set --project "my-game" --type glossary --json '{"extract_npcs": true, "keep_item_ids": true, "translate_locations": false}'
+```
+
+#### Add Single Properties
+
+```bash
+# Add to project context
+python cli.py context add --project "my-game" --key "genre" --value "RPG"
+python cli.py context add --project "my-game" --key "tone" --value "epic"
+
+# Add to glossary context
+python cli.py context add --project "my-game" --type glossary --key "extract_skills" --value "true"
+```
+
+#### View Current Context
+
+```bash
+# Show all context
+python cli.py context show --project "my-game"
+
+# Show only project context
+python cli.py context show --project "my-game" --type project
+
+# Show only glossary context
+python cli.py context show --project "my-game" --type glossary
+```
+
+#### Context File Examples
+
+**PROJECT_CONTEXT.md:**
+```markdown
+# Game Context
+
+## Genre
+Dark Fantasy RPG with Metroidvania elements
+
+## Target Audience
+Young adults (18-30), fantasy enthusiasts
+
+## Tone and Style
+- Epic and serious main storyline
+- Some humor in NPC interactions
+- Archaic language for ancient texts and spells
+
+## Special Instructions
+- Keep all [ITEM_ID] tags unchanged
+- Dragon names should sound ancient
+- Use formal language for official documents
+- Preserve color codes like [color=#FF0000]
+```
+
+**GLOSSARY_CONTEXT.md:**
+```markdown
+# Glossary Extraction Rules
+
+## Extract These Terms
+- Character names (NPCs, bosses, companions)
+- Location names (cities, dungeons, regions)
+- Item names (weapons, armor, consumables)
+- Skill and spell names
+- Unique game terminology and lore terms
+
+## Do NOT Extract
+- Common gaming terms (level, health, mana, inventory)
+- UI elements (button labels, menu items)
+- Generic descriptive words
+
+## Translation Guidelines
+- Character names: Keep original or adapt phonetically
+- Locations: Translate descriptive names, keep proper nouns
+- Items: Translate functionality, keep brand names
+- Skills: Make them sound powerful and fantasy-appropriate
+```
+
 ## Workflow Examples
 
 ### Complete Translation Workflow
@@ -228,13 +336,23 @@ percentage_vars,%\w+%,"Percentage variables like %PLAYER%",true
    python cli.py init --name "rpg-game" --target-lang "es"
    ```
 
-2. **Create custom patterns:**
+2. **Set up context for better translations:**
+   ```bash
+   # Create context files
+   python cli.py context set --project "rpg-game" --json '{"genre": "Fantasy RPG", "tone": "epic", "audience": "adults"}'
+
+   # Or from files
+   echo "Fantasy RPG with epic storyline targeting adults" > game_context.md
+   python cli.py context set --project "rpg-game" --file "game_context.md"
+   ```
+
+3. **Create custom patterns:**
    ```bash
    python cli.py create-patterns --template excel
    # Edit the created template file
    ```
 
-3. **Translate with validation:**
+4. **Translate with validation:**
    ```bash
    python cli.py translate \
      --project "rpg-game" \
@@ -242,12 +360,12 @@ percentage_vars,%\w+%,"Percentage variables like %PLAYER%",true
      --patterns "validation_patterns_template.xlsx"
    ```
 
-4. **Check quality:**
+5. **Check quality:**
    ```bash
    python cli.py validate --project "rpg-game" --strict
    ```
 
-5. **Monitor progress:**
+6. **Monitor progress:**
    ```bash
    python cli.py status --project "rpg-game"
    ```
