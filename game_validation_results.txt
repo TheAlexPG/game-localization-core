@@ -1,0 +1,81 @@
+SILKSONG GAME DATA VALIDATION
+========================================
+
+Silksong with page tags and entities:
+  Expected: OK - all entities preserved
+  OK: All validation checks passed
+
+Shop item with apostrophe entity:
+  Expected: OK - apostrophe entity preserved
+  OK: All validation checks passed
+
+Missing HTML entity:
+  Expected: ERROR - HTML entities missing
+  ERROR: HTML entities mismatch. Missing: &lt;, &amp;, &gt;
+  ERROR: HTML/XML tags don't match. Source: [], Translation: ['<special>']
+
+
+X4 FOUNDATIONS GAME DATA VALIDATION
+========================================
+
+X4 with game ID placeholders:
+  Expected: OK - game ID preserved
+  OK: All validation checks passed
+
+X4 with system input variables:
+  Expected: OK - system variable preserved
+  OK: All validation checks passed
+
+Multiple game IDs and system vars:
+  Expected: OK - all placeholders preserved
+  OK: All validation checks passed
+
+Missing system variable:
+  Expected: ERROR - system variables missing
+  ERROR: System variables mismatch. Missing: $INPUT_ACTION_FIRE$, $INPUT_ACTION_BOOST$
+    Suggestion: Expected system variables: $INPUT_ACTION_BOOST$, $INPUT_ACTION_FIRE$
+
+Wrong game ID:
+  Expected: ERROR - game ID mismatch
+  ERROR: Regular placeholders mismatch. Missing: {20108,111}; Extra: {20108,112}
+    Suggestion: Expected regular placeholders: {20108,111}
+
+
+MIXED MARKUP VALIDATION
+=========================
+
+All markup types combined:
+  Expected: OK - all markup preserved
+  OK: All validation checks passed
+
+Complex missing elements:
+  Expected: ERROR - all markup types missing
+  ERROR: Regular placeholders mismatch. Missing: {item,123}
+  ERROR: System variables mismatch. Missing: $ACTION_USE$
+  ERROR: HTML entities mismatch. Missing: &lt;, &amp;, &gt;
+
+
+==================================================
+VALIDATION COVERAGE SUMMARY
+==================================================
+
+Now supports all real game markup types:
+
+✓ Regular placeholders: {level}, {score}
+✓ Game ID placeholders: {20204,5101}, {20108,111}
+✓ System variables: $INPUT_ACTION_FIRE$, $INPUT_ACTION_BOOST$
+✓ HTML entities: &lt; &gt; &amp; &#8217;
+✓ HTML/XML tags: <t id="123">, <b>, </b>
+
+The validator will detect:
+- Missing placeholders of any type
+- Extra placeholders not in source
+- Incorrect game IDs or system variables
+- Missing or wrong HTML entities
+- Tag structure mismatches
+
+This covers the markup found in:
+- Hollow Knight: Silksong
+- X4: Foundations
+- And similar game localization files
+

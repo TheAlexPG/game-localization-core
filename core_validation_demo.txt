@@ -1,0 +1,134 @@
+PLACEHOLDER VALIDATION
+==============================
+
+OK Correct placeholders:
+  Source:      'Level {level} completed with {score} points'
+  Translation: 'Рівень {level} завершено з {score} очками'
+  Source placeholders:      ['{level}', '{score}']
+  Translation placeholders: ['{level}', '{score}']
+  OK: Placeholders match
+
+ERROR Missing placeholder:
+  Source:      'Player {name} has {coins} coins'
+  Translation: 'Гравець має монети'
+  Source placeholders:      ['{name}', '{coins}']
+  Translation placeholders: []
+  ERROR: Placeholder mismatch. Missing: {coins}, {name}
+      Suggestion: Expected placeholders: {coins}, {name}
+
+ERROR Extra placeholder:
+  Source:      'Welcome to the game'
+  Translation: 'Ласкаво просимо до гри {version}'
+  Source placeholders:      []
+  Translation placeholders: ['{version}']
+  ERROR: Placeholder mismatch. Extra: {version}
+      Suggestion: Expected placeholders: 
+
+ERROR Wrong placeholder names:
+  Source:      'Damage: {damage}'
+  Translation: 'Урон: {dmg}'
+  Source placeholders:      ['{damage}']
+  Translation placeholders: ['{dmg}']
+  ERROR: Placeholder mismatch. Missing: {damage}; Extra: {dmg}
+      Suggestion: Expected placeholders: {damage}
+
+OK Multiple same placeholders:
+  Source:      '{value} + {value} = {result}'
+  Translation: '{value} + {value} = {result}'
+  Source placeholders:      ['{value}', '{value}', '{result}']
+  Translation placeholders: ['{value}', '{value}', '{result}']
+  OK: Placeholders match
+
+
+HTML/XML TAG VALIDATION
+==============================
+
+OK Correct HTML tags:
+  Source:      'Click <b>here</b> to continue'
+  Translation: 'Натисніть <b>тут</b> для продовження'
+  Source tags:      ['<b>', '</b>']
+  Translation tags: ['<b>', '</b>']
+  OK: Tags match
+
+ERROR Missing closing tag:
+  Source:      'This is <strong>important</strong> text'
+  Translation: 'Це <strong>важливий текст'
+  Source tags:      ['<strong>', '</strong>']
+  Translation tags: ['<strong>']
+  ERROR: HTML/XML tags don't match. Source: ['<strong>', '</strong>'], Translation: ['<strong>']
+      Suggestion: Expected tags: <strong>, </strong>
+
+ERROR Different tag:
+  Source:      'Click <b>Start</b> button'
+  Translation: 'Натисніть <strong>Старт</strong> кнопку'
+  Source tags:      ['<b>', '</b>']
+  Translation tags: ['<strong>', '</strong>']
+  ERROR: HTML/XML tags don't match. Source: ['<b>', '</b>'], Translation: ['<strong>', '</strong>']
+      Suggestion: Expected tags: <b>, </b>
+
+OK Self-closing XML tags:
+  Source:      'Next page<br/>Continue'
+  Translation: 'Наступна сторінка<br/>Продовжити'
+  Source tags:      ['<br/>']
+  Translation tags: ['<br/>']
+  OK: Tags match
+
+ERROR Removed all tags:
+  Source:      'Press <i>any</i> key to <u>continue</u>'
+  Translation: 'Натисніть будь-яку клавішу для продовження'
+  Source tags:      ['<i>', '</i>', '<u>', '</u>']
+  Translation tags: []
+  ERROR: HTML/XML tags don't match. Source: ['<i>', '</i>', '<u>', '</u>'], Translation: []
+      Suggestion: Expected tags: <i>, </i>, <u>, </u>
+
+OK Tags with attributes (simplified check):
+  Source:      '<a href="#menu">Menu</a>'
+  Translation: '<a href="#menu">Меню</a>'
+  Source tags:      ['<a href="#menu">', '</a>']
+  Translation tags: ['<a href="#menu">', '</a>']
+  OK: Tags match
+
+
+VALIDATION LOGIC EXPLAINED
+==============================
+
+PLACEHOLDER VALIDATION:
+1. Uses regex pattern: r'\{[^}]+\}'
+2. Finds all {placeholder} patterns in source text
+3. Finds all {placeholder} patterns in translation
+4. Compares two sets of placeholders
+5. Reports missing or extra placeholders
+
+Example code:
+    source_placeholders = re.findall(r'\{[^}]+\}', source_text)
+    trans_placeholders = re.findall(r'\{[^}]+\}', translation)
+
+    source_set = set(source_placeholders)
+    trans_set = set(trans_placeholders)
+
+    if source_set != trans_set:
+        missing = source_set - trans_set  # In source but not in translation
+        extra = trans_set - source_set    # In translation but not in source
+        # Report as error
+
+HTML/XML TAG VALIDATION:
+1. Uses regex pattern: r'<[^>]+>'
+2. Finds all <tag> patterns in source text
+3. Finds all <tag> patterns in translation
+4. Compares tag lists (order matters for now)
+5. Reports mismatched tag structure
+
+Example code:
+    source_tags = re.findall(r'<[^>]+>', source_text)
+    trans_tags = re.findall(r'<[^>]+>', translation)
+
+    if source_tags != trans_tags:
+        # Report tag mismatch error
+
+NOTE: Current implementation does simple string comparison.
+Could be enhanced to:
+- Normalize tag attributes
+- Check only tag names, ignore attributes
+- Handle tag reordering
+- Validate proper nesting
+

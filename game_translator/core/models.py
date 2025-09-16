@@ -12,6 +12,10 @@ class TranslationStatus(Enum):
     """Translation entry status"""
     PENDING = "pending"
     TRANSLATED = "translated"
+    REVIEWED = "reviewed"
+    APPROVED = "approved"
+    NEEDS_UPDATE = "needs_update"
+    SKIPPED = "skipped"
 
 
 @dataclass
@@ -104,19 +108,27 @@ class ProgressStats:
     total: int = 0
     pending: int = 0
     translated: int = 0
+    reviewed: int = 0
+    approved: int = 0
+    needs_update: int = 0
+    skipped: int = 0
 
     @property
     def completion_rate(self) -> float:
         """Calculate completion percentage"""
         if self.total == 0:
             return 0
-        return (self.translated / self.total) * 100
+        return (self.translated + self.reviewed + self.approved) / self.total * 100
 
     def update_from_entries(self, entries: list):
         """Update stats from entry list"""
         self.total = len(entries)
         self.pending = sum(1 for e in entries if e.status == TranslationStatus.PENDING)
         self.translated = sum(1 for e in entries if e.status == TranslationStatus.TRANSLATED)
+        self.reviewed = sum(1 for e in entries if e.status == TranslationStatus.REVIEWED)
+        self.approved = sum(1 for e in entries if e.status == TranslationStatus.APPROVED)
+        self.needs_update = sum(1 for e in entries if e.status == TranslationStatus.NEEDS_UPDATE)
+        self.skipped = sum(1 for e in entries if e.status == TranslationStatus.SKIPPED)
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary"""
@@ -124,5 +136,9 @@ class ProgressStats:
             "total": self.total,
             "pending": self.pending,
             "translated": self.translated,
+            "reviewed": self.reviewed,
+            "approved": self.approved,
+            "needs_update": self.needs_update,
+            "skipped": self.skipped,
             "completion_rate": self.completion_rate
         }

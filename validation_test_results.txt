@@ -1,0 +1,132 @@
+Translation Validation System Test
+==================================================
+Testing individual entry validation...
+
+--- Validating: good_translation ---
+  OK: No issues found
+
+--- Validating: missing_translation ---
+  ERRORS (1):
+    - missing_translation: Translation is missing but status is not pending
+
+--- Validating: unchanged_translation ---
+  WARNINGS (2):
+    - unchanged: Translation identical to source text
+    - wrong_script: Translation appears to use Latin script instead of Cyrillic
+      Suggestion: Check if this is actually translated to Ukrainian
+
+--- Validating: placeholder_issue ---
+  ERRORS (1):
+    - placeholder_mismatch: Placeholder mismatch. Missing: {level}, {score}
+      Suggestion: Expected placeholders: {level}, {score}
+
+--- Validating: tag_issue ---
+  ERRORS (1):
+    - tag_mismatch: HTML/XML tags don't match. Source: ['<b>', '</b>'], Translation: []
+      Suggestion: Expected tags: <b>, </b>
+
+--- Validating: too_long ---
+  WARNINGS (1):
+    - too_long: Translation is very long (17.0x original)
+      Suggestion: Consider shortening if possible
+  INFO (1):
+    - title_case: Source uses title case, translation might need adjustment
+
+--- Validating: too_short ---
+  WARNINGS (1):
+    - too_short: Translation is very short (0.1x original)
+      Suggestion: Check if content is missing
+
+--- Validating: wrong_language ---
+  WARNINGS (2):
+    - unchanged: Translation identical to source text
+    - wrong_script: Translation appears to use Latin script instead of Cyrillic
+      Suggestion: Check if this is actually translated to Ukrainian
+
+--- Validating: technical_ok ---
+  WARNINGS (2):
+    - unchanged: Translation identical to source text
+    - wrong_script: Translation appears to use Latin script instead of Cyrillic
+      Suggestion: Check if this is actually translated to Ukrainian
+
+--- Validating: english_words ---
+  OK: No issues found
+
+--- Validating: repeated_words ---
+  WARNINGS (1):
+    - repeated_words: Repeated word detected: 'монети'
+
+--- Validating: placeholder_text ---
+  ERRORS (1):
+    - placeholder_text: Translation contains '???' placeholder
+
+--- Validating: todo_marker ---
+  ERRORS (1):
+    - todo_marker: Translation contains TODO marker
+  WARNINGS (1):
+    - wrong_script: Translation appears to use Latin script instead of Cyrillic
+      Suggestion: Check if this is actually translated to Ukrainian
+  INFO (1):
+    - long_translation: Translation is long (2.2x original)
+
+--- Validating: inconsistent_1 ---
+  OK: No issues found
+
+--- Validating: inconsistent_2 ---
+  OK: No issues found
+
+==================================================
+Testing project-wide validation...
+
+--- Project Validation Results ---
+Checked 15 entries
+Found 5 errors, 11 warnings, 2 info items
+
+ERRORS (5):
+  [missing_translation] missing_translation: Translation is missing but status is not pending
+  [placeholder_issue] placeholder_mismatch: Placeholder mismatch. Missing: {level}, {score}
+  [tag_issue] tag_mismatch: HTML/XML tags don't match. Source: ['<b>', '</b>'], Translation: []
+  [placeholder_text] placeholder_text: Translation contains '???' placeholder
+  [todo_marker] todo_marker: Translation contains TODO marker
+
+WARNINGS (11):
+  [unchanged_translation] unchanged: Translation identical to source text
+  [unchanged_translation] wrong_script: Translation appears to use Latin script instead of Cyrillic
+  [too_long] too_long: Translation is very long (17.0x original)
+  [too_short] too_short: Translation is very short (0.1x original)
+  [wrong_language] unchanged: Translation identical to source text
+  [wrong_language] wrong_script: Translation appears to use Latin script instead of Cyrillic
+  [technical_ok] unchanged: Translation identical to source text
+  [technical_ok] wrong_script: Translation appears to use Latin script instead of Cyrillic
+  [repeated_words] repeated_words: Repeated word detected: 'монети'
+  [todo_marker] wrong_script: Translation appears to use Latin script instead of Cyrillic
+
+INFO (2):
+  [too_long] title_case: Source uses title case, translation might need adjustment
+  [todo_marker] long_translation: Translation is long (2.2x original)
+
+--- Quality Metrics ---
+Completion Rate: 100.0%
+Quality Score: 28.0/100 (Grade: F)
+Summary: Checked 15 entries: 5 errors, 11 warnings
+
+==================================================
+Testing strict mode...
+Normal mode:
+  Errors: 0
+  Warnings: 2
+Strict mode:
+  Errors: 1
+  Warnings: 1
+
+==================================================
+All validation tests completed successfully!
+
+Validation system features:
+  + Individual entry validation
+  + Project-wide consistency checks
+  + Placeholder and tag validation
+  + Length and language checks
+  + Quality scoring and grading
+  + Strict/normal mode support
+  + Detailed issue reporting with suggestions
