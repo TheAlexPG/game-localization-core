@@ -13,6 +13,7 @@ except ImportError:
     OPENAI_AVAILABLE = False
 
 from .base import BaseTranslationProvider
+from ..core.smart_glossary import SmartGlossaryMatcher, format_glossary_for_prompt
 
 
 class DirectOpenAIProvider(BaseTranslationProvider):
@@ -39,7 +40,8 @@ class DirectOpenAIProvider(BaseTranslationProvider):
     def translate_texts(self, texts: List[str],
                        source_lang: str, target_lang: str,
                        glossary: Optional[Dict[str, str]] = None,
-                       context: Optional[str] = None) -> List[str]:
+                       context: Optional[str] = None,
+                       use_smart_glossary: bool = True) -> List[str]:
         """Translate texts using OpenAI API with batching"""
         if not texts:
             return []
@@ -51,16 +53,17 @@ class DirectOpenAIProvider(BaseTranslationProvider):
         all_translations = []
 
         for batch in batches:
-            translations = self._translate_batch(batch, source_lang, target_lang, glossary, context)
+            translations = self._translate_batch(batch, source_lang, target_lang, glossary, context, use_smart_glossary)
             all_translations.extend(translations)
 
         return all_translations
 
     def _translate_batch(self, texts: List[str], source_lang: str, target_lang: str,
                         glossary: Optional[Dict[str, str]] = None,
-                        context: Optional[str] = None) -> List[str]:
+                        context: Optional[str] = None,
+                        use_smart_glossary: bool = True) -> List[str]:
         """Translate a single batch"""
-        prompt = self._create_translation_prompt(texts, source_lang, target_lang, glossary, context)
+        prompt = self._create_translation_prompt(texts, source_lang, target_lang, glossary, context, use_smart_glossary)
 
         for attempt in range(self.max_retries):
             try:
@@ -83,8 +86,9 @@ class DirectOpenAIProvider(BaseTranslationProvider):
 
     def _create_translation_prompt(self, texts: List[str], source_lang: str, target_lang: str,
                                  glossary: Optional[Dict[str, str]] = None,
-                                 context: Optional[str] = None) -> str:
-        """Create translation prompt"""
+                                 context: Optional[str] = None,
+                                 use_smart_glossary: bool = True) -> str:
+        """Create translation prompt with smart glossary filtering"""
         prompt = f"""Translate the following texts from {source_lang} to {target_lang}.
 Keep the translation natural and contextually appropriate for a video game.
 
@@ -102,11 +106,24 @@ CRITICAL FORMATTING RULES:
             # Context can be a simple string or formatted context from project
             prompt += f"{context}\n\n"
 
+        # Smart glossary filtering
         if glossary:
-            prompt += "Use these consistent translations for specific terms:\n"
-            for en_term, ua_term in glossary.items():
-                prompt += f"- {en_term} → {ua_term}\n"
-            prompt += "\n"
+            effective_glossary = glossary
+
+            if use_smart_glossary:
+                # Use SmartGlossaryMatcher to find only relevant terms
+                matcher = SmartGlossaryMatcher(glossary)
+                effective_glossary = matcher.find_batch_relevant_terms(texts)
+
+                # Add optimization info in debug mode
+                if effective_glossary:
+                    stats = matcher.get_coverage_stats(texts)
+                    print(f"Smart Glossary: Using {stats['relevant_terms_found']}/{stats['total_glossary_terms']} terms ({stats['optimization_ratio']}% reduction)")
+
+            if effective_glossary:
+                formatted_glossary = format_glossary_for_prompt(effective_glossary)
+                if formatted_glossary:
+                    prompt += f"{formatted_glossary}\n\n"
 
         prompt += "Translate each numbered line and provide ONLY the translation, preserving all formatting:\n\n"
 

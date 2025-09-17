@@ -15,7 +15,8 @@ class BaseTranslationProvider(ABC):
     def translate_texts(self, texts: List[str],
                        source_lang: str, target_lang: str,
                        glossary: Optional[Dict[str, str]] = None,
-                       context: Optional[str] = None) -> List[str]:
+                       context: Optional[str] = None,
+                       use_smart_glossary: bool = True) -> List[str]:
         """
         Translate list of texts.
 
@@ -25,6 +26,7 @@ class BaseTranslationProvider(ABC):
             target_lang: Target language code/name
             glossary: Optional glossary for consistent terms
             context: Optional context information
+            use_smart_glossary: If True, filter glossary to only relevant terms
 
         Returns:
             List of translated texts in same order
@@ -33,9 +35,10 @@ class BaseTranslationProvider(ABC):
 
     def translate_single(self, text: str, source_lang: str, target_lang: str,
                         glossary: Optional[Dict[str, str]] = None,
-                        context: Optional[str] = None) -> str:
+                        context: Optional[str] = None,
+                        use_smart_glossary: bool = True) -> str:
         """Translate single text (convenience method)"""
-        result = self.translate_texts([text], source_lang, target_lang, glossary, context)
+        result = self.translate_texts([text], source_lang, target_lang, glossary, context, use_smart_glossary)
         return result[0] if result else text
 
     def validate_connection(self) -> bool:

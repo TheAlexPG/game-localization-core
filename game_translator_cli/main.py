@@ -96,11 +96,12 @@ def init(name: str, source_lang: str, target_lang: str, source_format: str,
               required=True, help='AI provider to use')
 @click.option('--model', help='Model name (provider-specific)')
 @click.option('--api-key', help='API key for provider (if required)')
+@click.option('--api-url', help='API URL for local provider')
 @click.option('--batch-size', default=5, help='Number of texts to translate at once')
 @click.option('--max-entries', type=int, help='Maximum entries to translate (for testing)')
 @click.option('--patterns', help='Custom validation patterns file (CSV/Excel/JSON)')
 def translate(project: str, provider: str, model: Optional[str], api_key: Optional[str],
-              batch_size: int, max_entries: Optional[int], patterns: Optional[str]):
+              api_url: Optional[str], batch_size: int, max_entries: Optional[int], patterns: Optional[str]):
     """Translate pending entries using AI"""
 
     # Load project
@@ -139,7 +140,10 @@ def translate(project: str, provider: str, model: Optional[str], api_key: Option
         if provider == 'openai':
             ai_provider = get_provider('openai', api_key=api_key, model_name=model or 'gpt-4o-mini')
         elif provider == 'local':
-            ai_provider = get_provider('local', model_name=model or 'local-model')
+            kwargs = {'model_name': model or 'local-model'}
+            if api_url:
+                kwargs['api_url'] = api_url
+            ai_provider = get_provider('local', **kwargs)
         elif provider == 'mock':
             ai_provider = get_provider('mock')
         else:
@@ -425,6 +429,366 @@ def status(project: str):
         click.echo(f"  Approved: {stats.approved} ({stats.approved/stats.total*100:.1f}%)")
         click.echo()
         click.echo(f"Completion: {stats.completion_rate:.1f}%")
+
+
+@cli.command()
+@click.option('--project', '-p', required=True, help='Project name or path')
+@click.option('--provider', type=click.Choice(['openai', 'local', 'mock']),
+              required=True, help='AI provider to use')
+@click.option('--model', help='Model name (provider-specific)')
+@click.option('--api-key', help='API key for provider (if required)')
+@click.option('--api-url', help='API URL for local provider')
+@click.option('--threads', '-t', default=1, help='Number of parallel threads (default: 1)')
+@click.option('--batch-size', default=10, help='Number of texts per batch')
+@click.option('--max-entries', type=int, help='Maximum entries to process (for testing)')
+def extract_terms(project: str, provider: str, model: Optional[str], api_key: Optional[str],
+                  api_url: Optional[str], threads: int, batch_size: int, max_entries: Optional[int]):
+    """Extract important terms from source texts for glossary building"""
+
+    from game_translator.core.project import TranslationProject
+    from game_translator.providers import get_provider
+    import threading
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+
+    try:
+        # Load project
+        project_obj = TranslationProject.load(project)
+        click.echo(f"Loaded project: {project_obj.config.name}")
+
+        # Get source entries
+        entries = list(project_obj.entries.values())
+        source_texts = [entry.source_text for entry in entries if entry.source_text]
+
+        if max_entries:
+            source_texts = source_texts[:max_entries]
+
+        click.echo(f"Extracting terms from {len(source_texts)} source texts...")
+
+        # Initialize provider
+        provider_kwargs = {}
+        if api_key:
+            provider_kwargs['api_key'] = api_key
+        if model:
+            provider_kwargs['model_name'] = model
+        if api_url and provider == 'local':
+            provider_kwargs['api_url'] = api_url
+
+        ai_provider = get_provider(provider, **provider_kwargs)
+
+        # Get project and glossary context
+        project_context = project_obj.format_context_for_prompt('project')
+        glossary_context = project_obj.format_context_for_prompt('glossary')
+        combined_context = f"{project_context}\n{glossary_context}".strip()
+
+        # Extract terms with threading
+        all_terms = set()
+        completed_batches = 0
+
+        def extract_batch(texts_batch):
+            try:
+                # Join texts for batch processing
+                combined_text = "\n".join(texts_batch)
+                extracted = ai_provider.extract_terms_structured(combined_text, combined_context)
+                return extracted
+            except Exception as e:
+                click.echo(f"Error in batch: {e}")
+                return []
+
+        # Create batches
+        batches = [source_texts[i:i+batch_size] for i in range(0, len(source_texts), batch_size)]
+
+        if RICH_AVAILABLE:
+            from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
+            with Progress(
+                SpinnerColumn(),
+                TextColumn("[progress.description]{task.description}"),
+                BarColumn(),
+                TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+                console=console
+            ) as progress:
+                task = progress.add_task("Extracting terms...", total=len(batches))
+
+                with ThreadPoolExecutor(max_workers=threads) as executor:
+                    future_to_batch = {executor.submit(extract_batch, batch): batch for batch in batches}
+
+                    for future in as_completed(future_to_batch):
+                        try:
+                            terms = future.result()
+                            all_terms.update(terms)
+                            progress.advance(task)
+                        except Exception as e:
+                            click.echo(f"Batch failed: {e}")
+                            progress.advance(task)
+        else:
+            with ThreadPoolExecutor(max_workers=threads) as executor:
+                future_to_batch = {executor.submit(extract_batch, batch): batch for batch in batches}
+
+                for future in as_completed(future_to_batch):
+                    try:
+                        terms = future.result()
+                        all_terms.update(terms)
+                        completed_batches += 1
+                        click.echo(f"Completed batch {completed_batches}/{len(batches)}")
+                    except Exception as e:
+                        click.echo(f"Batch failed: {e}")
+                        completed_batches += 1
+
+        # Save extracted terms to project
+        extracted_terms = list(all_terms)
+        extracted_terms_data = {term: {"source": term, "translated": None, "context": "extracted"} for term in extracted_terms}
+
+        # Save to extracted terms file
+        extracted_file = project_obj.project_dir / "glossary" / "extracted_terms.json"
+        import json
+        with open(extracted_file, 'w', encoding='utf-8') as f:
+            json.dump(extracted_terms_data, f, indent=2, ensure_ascii=False)
+
+        click.echo(f"\nExtracted {len(extracted_terms)} unique terms")
+        click.echo(f"Saved to: {extracted_file}")
+        click.echo("\nSample terms:")
+        for term in list(extracted_terms)[:10]:
+            click.echo(f"  - {term}")
+        if len(extracted_terms) > 10:
+            click.echo(f"  ... and {len(extracted_terms) - 10} more")
+
+    except Exception as e:
+        click.echo(f"Error: {e}", err=True)
+
+
+@cli.command()
+@click.option('--project', '-p', required=True, help='Project name or path')
+@click.option('--provider', type=click.Choice(['openai', 'local', 'mock']),
+              required=True, help='AI provider to use')
+@click.option('--model', help='Model name (provider-specific)')
+@click.option('--api-key', help='API key for provider (if required)')
+@click.option('--api-url', help='API URL for local provider')
+@click.option('--threads', '-t', default=1, help='Number of parallel threads (default: 1)')
+@click.option('--batch-size', default=10, help='Number of terms per batch')
+@click.option('--input-file', help='Input file with extracted terms (default: extracted_terms.json)')
+def translate_glossary(project: str, provider: str, model: Optional[str], api_key: Optional[str],
+                       api_url: Optional[str], threads: int, batch_size: int, input_file: Optional[str]):
+    """Translate extracted glossary terms"""
+
+    from game_translator.core.project import TranslationProject
+    from game_translator.providers import get_provider
+    import json
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+
+    try:
+        # Load project
+        project_obj = TranslationProject.load(project)
+        click.echo(f"Loaded project: {project_obj.config.name}")
+
+        # Load extracted terms
+        if not input_file:
+            input_file = project_obj.project_dir / "glossary" / "extracted_terms.json"
+        else:
+            input_file = Path(input_file)
+
+        if not input_file.exists():
+            click.echo(f"Error: Extracted terms file not found: {input_file}", err=True)
+            click.echo("Run 'extract-terms' command first", err=True)
+            return
+
+        with open(input_file, 'r', encoding='utf-8') as f:
+            terms_data = json.load(f)
+
+        # Get terms that need translation
+        terms_to_translate = [term for term, data in terms_data.items()
+                             if not data.get('translated')]
+
+        if not terms_to_translate:
+            click.echo("All terms are already translated!")
+            return
+
+        click.echo(f"Translating {len(terms_to_translate)} terms...")
+
+        # Initialize provider
+        provider_kwargs = {}
+        if api_key:
+            provider_kwargs['api_key'] = api_key
+        if model:
+            provider_kwargs['model_name'] = model
+        if api_url and provider == 'local':
+            provider_kwargs['api_url'] = api_url
+
+        ai_provider = get_provider(provider, **provider_kwargs)
+
+        # Get project config for languages
+        config = project_obj.config
+
+        # Translate in batches with threading
+        def translate_batch(terms_batch):
+            try:
+                translations = ai_provider.translate_glossary_structured(
+                    terms_batch,
+                    config.source_lang,
+                    config.target_lang
+                )
+                return dict(zip(terms_batch, translations))
+            except Exception as e:
+                click.echo(f"Error in batch: {e}")
+                return {}
+
+        # Create batches
+        batches = [terms_to_translate[i:i+batch_size] for i in range(0, len(terms_to_translate), batch_size)]
+        translated_terms = {}
+
+        if RICH_AVAILABLE:
+            from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
+            with Progress(
+                SpinnerColumn(),
+                TextColumn("[progress.description]{task.description}"),
+                BarColumn(),
+                TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+                console=console
+            ) as progress:
+                task = progress.add_task("Translating glossary...", total=len(batches))
+
+                with ThreadPoolExecutor(max_workers=threads) as executor:
+                    future_to_batch = {executor.submit(translate_batch, batch): batch for batch in batches}
+
+                    for future in as_completed(future_to_batch):
+                        try:
+                            batch_translations = future.result()
+                            translated_terms.update(batch_translations)
+                            progress.advance(task)
+                        except Exception as e:
+                            click.echo(f"Batch failed: {e}")
+                            progress.advance(task)
+        else:
+            completed_batches = 0
+            with ThreadPoolExecutor(max_workers=threads) as executor:
+                future_to_batch = {executor.submit(translate_batch, batch): batch for batch in batches}
+
+                for future in as_completed(future_to_batch):
+                    try:
+                        batch_translations = future.result()
+                        translated_terms.update(batch_translations)
+                        completed_batches += 1
+                        click.echo(f"Completed batch {completed_batches}/{len(batches)}")
+                    except Exception as e:
+                        click.echo(f"Batch failed: {e}")
+                        completed_batches += 1
+
+        # Update terms data with translations
+        for term, translation in translated_terms.items():
+            if term in terms_data:
+                terms_data[term]['translated'] = translation
+
+        # Save updated terms
+        with open(input_file, 'w', encoding='utf-8') as f:
+            json.dump(terms_data, f, indent=2, ensure_ascii=False)
+
+        # Also save as project glossary
+        glossary = {term: data['translated'] for term, data in terms_data.items()
+                   if data.get('translated')}
+        project_obj.glossary.update(glossary)
+        project_obj.save_glossary()
+
+        click.echo(f"\nTranslated {len(translated_terms)} terms")
+        click.echo(f"Updated: {input_file}")
+        click.echo(f"Glossary saved to project")
+        click.echo("\nSample translations:")
+        for term, translation in list(translated_terms.items())[:5]:
+            click.echo(f"  {term} -> {translation}")
+        if len(translated_terms) > 5:
+            click.echo(f"  ... and {len(translated_terms) - 5} more")
+
+    except Exception as e:
+        click.echo(f"Error: {e}", err=True)
+
+
+@cli.command()
+@click.option('--project', '-p', required=True, help='Project name or path')
+@click.option('--provider', type=click.Choice(['openai', 'local', 'mock']),
+              required=True, help='AI provider to use')
+@click.option('--model', help='Model name (provider-specific)')
+@click.option('--api-key', help='API key for provider (if required)')
+@click.option('--api-url', help='API URL for local provider')
+@click.option('--threads', '-t', default=1, help='Number of parallel threads (default: 1)')
+@click.option('--extract-threads', default=1, help='Threads for term extraction stage')
+@click.option('--glossary-threads', default=1, help='Threads for glossary translation stage')
+@click.option('--translate-threads', default=1, help='Threads for main translation stage')
+@click.option('--skip-extract', is_flag=True, help='Skip term extraction (use existing)')
+@click.option('--skip-glossary', is_flag=True, help='Skip glossary translation (use existing)')
+@click.option('--extract-batch-size', default=10, help='Batch size for term extraction')
+@click.option('--glossary-batch-size', default=10, help='Batch size for glossary translation')
+@click.option('--translate-batch-size', default=5, help='Batch size for main translation')
+def pipeline(project: str, provider: str, model: Optional[str], api_key: Optional[str],
+             api_url: Optional[str], threads: int, extract_threads: int, glossary_threads: int,
+             translate_threads: int, skip_extract: bool, skip_glossary: bool,
+             extract_batch_size: int, glossary_batch_size: int, translate_batch_size: int):
+    """Run complete 3-stage translation pipeline: extract terms -> translate glossary -> translate game"""
+
+    import subprocess
+    import sys
+
+    click.echo("Starting 3-stage translation pipeline")
+    click.echo(f"Project: {project}")
+    click.echo(f"Provider: {provider} ({model or 'default model'})")
+    click.echo(f"Threads: extract={extract_threads}, glossary={glossary_threads}, translate={translate_threads}")
+    click.echo("=" * 60)
+
+    # Base command parts
+    base_cmd = [sys.executable, '-m', 'game_translator_cli.main']
+    provider_args = ['--provider', provider]
+    if model:
+        provider_args.extend(['--model', model])
+    if api_key:
+        provider_args.extend(['--api-key', api_key])
+    if api_url:
+        provider_args.extend(['--api-url', api_url])
+
+    try:
+        # Stage 1: Extract terms
+        if not skip_extract:
+            click.echo("\nStage 1: Extracting terms from source texts...")
+            extract_cmd = base_cmd + ['extract-terms', '--project', project] + provider_args + [
+                '--threads', str(extract_threads),
+                '--batch-size', str(extract_batch_size)
+            ]
+            result = subprocess.run(extract_cmd, check=True, capture_output=True, text=True)
+            click.echo(result.stdout)
+        else:
+            click.echo("\nStage 1: Skipped (using existing extracted terms)")
+
+        # Stage 2: Translate glossary
+        if not skip_glossary:
+            click.echo("\nStage 2: Translating glossary terms...")
+            glossary_cmd = base_cmd + ['translate-glossary', '--project', project] + provider_args + [
+                '--threads', str(glossary_threads),
+                '--batch-size', str(glossary_batch_size)
+            ]
+            result = subprocess.run(glossary_cmd, check=True, capture_output=True, text=True)
+            click.echo(result.stdout)
+        else:
+            click.echo("\nStage 2: Skipped (using existing glossary)")
+
+        # Stage 3: Main translation with glossary
+        click.echo("\nStage 3: Translating game content with glossary...")
+        translate_cmd = base_cmd + ['translate', '--project', project] + provider_args + [
+            '--batch-size', str(translate_batch_size)
+        ]
+        # Note: translate command doesn't have threads option yet, using threads value for future
+        result = subprocess.run(translate_cmd, check=True, capture_output=True, text=True)
+        click.echo(result.stdout)
+
+        click.echo("\nPipeline completed successfully!")
+        click.echo("=" * 60)
+
+        # Show final status
+        status_cmd = base_cmd + ['status', '--project', project]
+        result = subprocess.run(status_cmd, check=True, capture_output=True, text=True)
+        click.echo(result.stdout)
+
+    except subprocess.CalledProcessError as e:
+        click.echo(f"\n❌ Pipeline failed at stage: {e.cmd}", err=True)
+        click.echo(f"Error: {e.stderr}", err=True)
+        sys.exit(1)
+    except Exception as e:
+        click.echo(f"\n❌ Pipeline error: {e}", err=True)
+        sys.exit(1)
 
 
 @cli.command()

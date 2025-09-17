@@ -18,7 +18,8 @@ class MockTranslationProvider(BaseTranslationProvider):
     def translate_texts(self, texts: List[str],
                        source_lang: str, target_lang: str,
                        glossary: Optional[Dict[str, str]] = None,
-                       context: Optional[str] = None) -> List[str]:
+                       context: Optional[str] = None,
+                       use_smart_glossary: bool = True) -> List[str]:
         """Simulate translation with simple transformations"""
         self.call_count += 1
 

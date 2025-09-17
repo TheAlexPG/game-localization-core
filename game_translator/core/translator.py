@@ -27,6 +27,7 @@ class TranslationManager:
                          batch_size: int = 10,
                          max_retries: int = 3,
                          skip_technical: bool = True,
+                         use_smart_glossary: bool = True,
                          progress_callback: Optional[callable] = None) -> Dict[str, Any]:
         """
         Translate multiple entries with batching and error handling.
@@ -36,6 +37,7 @@ class TranslationManager:
             batch_size: Number of entries per batch
             max_retries: Maximum retries for failed batches
             skip_technical: Skip technical entries automatically
+            use_smart_glossary: Use smart glossary filtering for efficiency
             progress_callback: Optional callback for progress updates
 
         Returns:
@@ -123,7 +125,8 @@ class TranslationManager:
                     source_lang=source_lang,
                     target_lang=target_lang,
                     glossary=self.project.glossary,
-                    context=project_context or f"Game: {self.project.config.name}"
+                    context=project_context or f"Game: {self.project.config.name}",
+                    use_smart_glossary=use_smart_glossary
                 )
 
                 # Update entries with translations

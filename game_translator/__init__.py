@@ -23,6 +23,7 @@ from .core.validation import (
     QualityMetrics
 )
 from .core.custom_patterns import CustomPatternsManager
+from .core.smart_glossary import SmartGlossaryMatcher, create_smart_glossary_matcher
 
 # Provider system
 from .providers.base import BaseTranslationProvider
@@ -50,6 +51,8 @@ __all__ = [
     "ValidationIssue",
     "QualityMetrics",
     "CustomPatternsManager",
+    "SmartGlossaryMatcher",
+    "create_smart_glossary_matcher",
 
     # Providers
     "BaseTranslationProvider",

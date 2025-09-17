@@ -49,7 +49,11 @@ class TranslationProject:
         with open(state_file, 'r', encoding='utf-8') as f:
             state = json.load(f)
 
-        config = state["config"]
+        # Handle both old format (with "config" key) and new format (flat)
+        if "config" in state:
+            config = state["config"]
+        else:
+            config = state
         project = cls(
             name=config["name"],
             source_lang=config["source_lang"],
@@ -257,8 +261,17 @@ class TranslationProject:
         with open(state_file, 'r', encoding='utf-8') as f:
             state = json.load(f)
 
-        # Load config
-        self.config = ProjectConfig.from_dict(state["config"])
+        # Load config - handle both old format (with "config" key) and new format (flat)
+        if "config" in state:
+            self.config = ProjectConfig.from_dict(state["config"])
+        else:
+            # Create config from flat structure (CLI format)
+            config_data = {k: v for k, v in state.items()
+                          if k in ['name', 'source_lang', 'target_lang', 'source_format', 'output_format']}
+            self.config = ProjectConfig.from_dict(config_data)
+            # Also load context data
+            self.config.project_context = state.get("project_context", {})
+            self.config.glossary_context = state.get("glossary_context", {})
         self.version = state.get("version", "1.0.0")
 
         # Load entries
@@ -406,3 +419,225 @@ class TranslationProject:
                 lines.append(f"{formatted_key}: {value}")
 
         return "\n".join(lines) if lines else ""
+
+    # ===== 3-STAGE PIPELINE METHODS =====
+
+    def extract_terms_from_sources(self, provider, max_entries: Optional[int] = None,
+                                  batch_size: int = 10, max_workers: int = 1) -> List[str]:
+        """Extract important terms from all source texts
+
+        Args:
+            provider: AI provider instance for term extraction
+            max_entries: Maximum entries to process (for testing)
+            batch_size: Number of texts per batch
+            max_workers: Number of parallel threads
+
+        Returns:
+            List of unique extracted terms
+        """
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+
+        # Get source entries
+        entries = list(self.entries.values())
+        source_texts = [entry.source_text for entry in entries if entry.source_text]
+
+        if max_entries:
+            source_texts = source_texts[:max_entries]
+
+        if not source_texts:
+            return []
+
+        # Get combined context
+        project_context = self.format_context_for_prompt('project')
+        glossary_context = self.format_context_for_prompt('glossary')
+        combined_context = f"{project_context}\n{glossary_context}".strip()
+
+        # Extract terms in batches
+        all_terms = set()
+
+        def extract_batch(texts_batch):
+            try:
+                combined_text = "\n".join(texts_batch)
+                return provider.extract_terms_structured(combined_text, combined_context)
+            except Exception as e:
+                print(f"Error in batch: {e}")
+                return []
+
+        # Create batches
+        batches = [source_texts[i:i+batch_size] for i in range(0, len(source_texts), batch_size)]
+
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            future_to_batch = {executor.submit(extract_batch, batch): batch for batch in batches}
+
+            for future in as_completed(future_to_batch):
+                try:
+                    terms = future.result()
+                    all_terms.update(terms)
+                except Exception as e:
+                    print(f"Batch failed: {e}")
+
+        # Save extracted terms
+        extracted_terms = list(all_terms)
+        extracted_terms_data = {
+            term: {"source": term, "translated": None, "context": "extracted"}
+            for term in extracted_terms
+        }
+
+        # Save to extracted terms file
+        extracted_file = self.glossary_dir / "extracted_terms.json"
+        with open(extracted_file, 'w', encoding='utf-8') as f:
+            json.dump(extracted_terms_data, f, indent=2, ensure_ascii=False)
+
+        return extracted_terms
+
+    def translate_extracted_glossary(self, provider, input_file: Optional[str] = None,
+                                   batch_size: int = 10, max_workers: int = 1) -> Dict[str, str]:
+        """Translate extracted glossary terms
+
+        Args:
+            provider: AI provider instance for translation
+            input_file: Input file with extracted terms (default: extracted_terms.json)
+            batch_size: Number of terms per batch
+            max_workers: Number of parallel threads
+
+        Returns:
+            Dictionary mapping terms to translations
+        """
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+
+        # Load extracted terms
+        if not input_file:
+            input_file = self.glossary_dir / "extracted_terms.json"
+        else:
+            input_file = Path(input_file)
+
+        if not input_file.exists():
+            raise FileNotFoundError(f"Extracted terms file not found: {input_file}")
+
+        with open(input_file, 'r', encoding='utf-8') as f:
+            terms_data = json.load(f)
+
+        # Get terms that need translation
+        terms_to_translate = [term for term, data in terms_data.items()
+                             if not data.get('translated')]
+
+        if not terms_to_translate:
+            return {}
+
+        # Translate in batches
+        def translate_batch(terms_batch):
+            try:
+                translations = provider.translate_glossary_structured(
+                    terms_batch,
+                    self.config.source_lang,
+                    self.config.target_lang
+                )
+                return dict(zip(terms_batch, translations))
+            except Exception as e:
+                print(f"Error in batch: {e}")
+                return {}
+
+        # Create batches
+        batches = [terms_to_translate[i:i+batch_size] for i in range(0, len(terms_to_translate), batch_size)]
+        translated_terms = {}
+
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            future_to_batch = {executor.submit(translate_batch, batch): batch for batch in batches}
+
+            for future in as_completed(future_to_batch):
+                try:
+                    batch_translations = future.result()
+                    translated_terms.update(batch_translations)
+                except Exception as e:
+                    print(f"Batch failed: {e}")
+
+        # Update terms data with translations
+        for term, translation in translated_terms.items():
+            if term in terms_data:
+                terms_data[term]['translated'] = translation
+
+        # Save updated terms
+        with open(input_file, 'w', encoding='utf-8') as f:
+            json.dump(terms_data, f, indent=2, ensure_ascii=False)
+
+        # Update project glossary
+        glossary = {term: data['translated'] for term, data in terms_data.items()
+                   if data.get('translated')}
+        self.glossary.update(glossary)
+        self.save_glossary()
+
+        return translated_terms
+
+    def run_three_stage_pipeline(self, provider, extract_threads: int = 1, glossary_threads: int = 1,
+                               translate_threads: int = 1, extract_batch_size: int = 10,
+                               glossary_batch_size: int = 10, translate_batch_size: int = 5,
+                               skip_extract: bool = False, skip_glossary: bool = False,
+                               max_extract_entries: Optional[int] = None) -> Dict[str, Any]:
+        """Run complete 3-stage translation pipeline
+
+        Args:
+            provider: AI provider instance
+            extract_threads: Threads for term extraction
+            glossary_threads: Threads for glossary translation
+            translate_threads: Threads for main translation (future use)
+            extract_batch_size: Batch size for term extraction
+            glossary_batch_size: Batch size for glossary translation
+            translate_batch_size: Batch size for main translation
+            skip_extract: Skip term extraction stage
+            skip_glossary: Skip glossary translation stage
+            max_extract_entries: Maximum entries for extraction (testing)
+
+        Returns:
+            Dictionary with pipeline results and statistics
+        """
+        results = {
+            "stages_completed": [],
+            "extracted_terms": 0,
+            "translated_terms": 0,
+            "pipeline_success": False
+        }
+
+        try:
+            # Stage 1: Extract terms
+            if not skip_extract:
+                print("📋 Stage 1: Extracting terms from source texts...")
+                extracted_terms = self.extract_terms_from_sources(
+                    provider=provider,
+                    max_entries=max_extract_entries,
+                    batch_size=extract_batch_size,
+                    max_workers=extract_threads
+                )
+                results["extracted_terms"] = len(extracted_terms)
+                results["stages_completed"].append("extract")
+                print(f"✅ Extracted {len(extracted_terms)} unique terms")
+            else:
+                print("📋 Stage 1: Skipped (using existing extracted terms)")
+
+            # Stage 2: Translate glossary
+            if not skip_glossary:
+                print("📚 Stage 2: Translating glossary terms...")
+                translated_terms = self.translate_extracted_glossary(
+                    provider=provider,
+                    batch_size=glossary_batch_size,
+                    max_workers=glossary_threads
+                )
+                results["translated_terms"] = len(translated_terms)
+                results["stages_completed"].append("glossary")
+                print(f"✅ Translated {len(translated_terms)} terms")
+            else:
+                print("📚 Stage 2: Skipped (using existing glossary)")
+
+            # Stage 3: Main translation (using existing translate method)
+            print("🎮 Stage 3: Translating game content with glossary...")
+            # Note: This would call existing translation logic
+            # For now, we'll just mark stage as ready
+            results["stages_completed"].append("translate_ready")
+            print("✅ Ready for main translation (run translate command)")
+
+            results["pipeline_success"] = True
+            return results
+
+        except Exception as e:
+            print(f"❌ Pipeline failed: {e}")
+            results["error"] = str(e)
+            return results
