@@ -527,12 +527,13 @@ class TranslationProject:
         # Translate in batches
         def translate_batch(terms_batch):
             try:
-                translations = provider.translate_glossary_structured(
+                # translate_glossary_structured returns Dict[str, str], not List[str]
+                translations_dict = provider.translate_glossary_structured(
                     terms_batch,
                     self.config.source_lang,
                     self.config.target_lang
                 )
-                return dict(zip(terms_batch, translations))
+                return translations_dict
             except Exception as e:
                 print(f"Error in batch: {e}")
                 return {}

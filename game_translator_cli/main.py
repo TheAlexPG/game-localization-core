@@ -154,47 +154,52 @@ def translate(project: str, provider: str, model: Optional[str], api_key: Option
         click.echo(f"Error initializing provider: {e}", err=True)
         return
 
-    # For demo purposes, create some sample entries
-    sample_entries = [
-        TranslationEntry(
-            key="welcome_message",
-            source_text="Welcome to the game, {player}!",
-            status=TranslationStatus.PENDING
-        ),
-        TranslationEntry(
-            key="level_complete",
-            source_text="Level {level} completed with {score} points",
-            status=TranslationStatus.PENDING
-        ),
-        TranslationEntry(
-            key="game_over",
-            source_text="Game Over - Press <b>Enter</b> to restart",
-            status=TranslationStatus.PENDING
-        )
-    ]
+    # Load real project data
+    from game_translator.core.project import TranslationProject
 
-    if max_entries:
-        sample_entries = sample_entries[:max_entries]
+    try:
+        project_obj = TranslationProject.load(project)
 
-    click.echo(f"Starting translation with {provider} provider...")
-    click.echo(f"Translating {len(sample_entries)} entries")
+        # Get pending entries
+        all_entries = list(project_obj.entries.values())
+        pending_entries = [entry for entry in all_entries if entry.status == TranslationStatus.PENDING]
+
+        if max_entries:
+            pending_entries = pending_entries[:max_entries]
+
+        if not pending_entries:
+            click.echo("No pending entries found for translation!")
+            return
+
+        click.echo(f"Starting translation with {provider} provider...")
+        click.echo(f"Translating {len(pending_entries)} pending entries out of {len(all_entries)} total")
+
+    except Exception as e:
+        click.echo(f"Error loading project data: {e}", err=True)
+        return
 
     # Translate entries
     if RICH_AVAILABLE:
+        from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
         with Progress(
             SpinnerColumn(),
             TextColumn("[progress.description]{task.description}"),
+            BarColumn(),
+            TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+            TextColumn("({task.completed}/{task.total})"),
             console=console
         ) as progress:
-            task = progress.add_task("Translating...", total=len(sample_entries))
+            task = progress.add_task("Translating entries...", total=len(pending_entries))
 
-            for entry in sample_entries:
+            for entry in pending_entries:
                 try:
                     # Simulate translation (replace with real translation logic)
                     translations = ai_provider.translate_texts(
                         [entry.source_text],
                         source_lang=config.source_lang,
-                        target_lang=config.target_lang
+                        target_lang=config.target_lang,
+                        glossary=project_obj.glossary,
+                        context=project_obj.format_context_for_prompt('project')
                     )
 
                     if translations:
@@ -211,14 +216,16 @@ def translate(project: str, provider: str, model: Optional[str], api_key: Option
                 except Exception as e:
                     click.echo(f"Error translating '{entry.key}': {e}")
     else:
-        for i, entry in enumerate(sample_entries, 1):
-            click.echo(f"Translating {i}/{len(sample_entries)}: {entry.key}")
+        for i, entry in enumerate(pending_entries, 1):
+            click.echo(f"Translating {i}/{len(pending_entries)}: {entry.key}")
 
             try:
                 translations = ai_provider.translate_texts(
                     [entry.source_text],
                     source_lang=config.source_lang,
-                    target_lang=config.target_lang
+                    target_lang=config.target_lang,
+                    glossary=project_obj.glossary,
+                    context=project_obj.format_context_for_prompt('project')
                 )
 
                 if translations:
@@ -233,11 +240,18 @@ def translate(project: str, provider: str, model: Optional[str], api_key: Option
             except Exception as e:
                 click.echo(f"  Error: {e}")
 
-    # Save results (demo - just print them)
+    # Save project with updated translations
+    try:
+        project_obj._save_project_state()
+        click.echo(f"\nProject saved with updated translations.")
+    except Exception as e:
+        click.echo(f"Warning: Could not save project: {e}")
+
+    # Show translation results
     click.echo("\nTranslation Results:")
     click.echo("-" * 40)
 
-    for entry in sample_entries:
+    for entry in pending_entries:
         click.echo(f"Key: {entry.key}")
         click.echo(f"Source: {entry.source_text}")
         click.echo(f"Translation: {entry.translated_text or '(failed)'}")
@@ -620,12 +634,13 @@ def translate_glossary(project: str, provider: str, model: Optional[str], api_ke
         # Translate in batches with threading
         def translate_batch(terms_batch):
             try:
-                translations = ai_provider.translate_glossary_structured(
+                # translate_glossary_structured returns Dict[str, str], not List[str]
+                translations_dict = ai_provider.translate_glossary_structured(
                     terms_batch,
                     config.source_lang,
                     config.target_lang
                 )
-                return dict(zip(terms_batch, translations))
+                return translations_dict
             except Exception as e:
                 click.echo(f"Error in batch: {e}")
                 return {}
@@ -1031,7 +1046,12 @@ def _load_project_config(proj_path: Path) -> Optional[ProjectConfig]:
     try:
         with open(config_file, 'r', encoding='utf-8') as f:
             config_data = json.load(f)
-        return ProjectConfig.from_dict(config_data)
+
+        # Handle both old format (with "config" key) and new format (flat)
+        if "config" in config_data:
+            return ProjectConfig.from_dict(config_data["config"])
+        else:
+            return ProjectConfig.from_dict(config_data)
     except Exception as e:
         click.echo(f"Error loading project config: {e}", err=True)
         return None

@@ -115,10 +115,7 @@ CRITICAL FORMATTING RULES:
                 matcher = SmartGlossaryMatcher(glossary)
                 effective_glossary = matcher.find_batch_relevant_terms(texts)
 
-                # Add optimization info in debug mode
-                if effective_glossary:
-                    stats = matcher.get_coverage_stats(texts)
-                    print(f"Smart Glossary: Using {stats['relevant_terms_found']}/{stats['total_glossary_terms']} terms ({stats['optimization_ratio']}% reduction)")
+                # Smart Glossary is working silently
 
             if effective_glossary:
                 formatted_glossary = format_glossary_for_prompt(effective_glossary)
