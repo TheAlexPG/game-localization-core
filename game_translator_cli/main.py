@@ -206,10 +206,7 @@ def translate(project: str, provider: str, model: Optional[str], api_key: Option
                         entry.translated_text = translations[0]
                         entry.status = TranslationStatus.TRANSLATED
 
-                        # Validate translation
-                        result = validator.validate_entry(entry)
-                        if result.issues:
-                            click.echo(f"WARNING: Validation issues for '{entry.key}': {len(result.issues)} errors")
+                        # Skip validation during translation to keep progress bar clean
 
                     progress.advance(task)
 
@@ -232,10 +229,7 @@ def translate(project: str, provider: str, model: Optional[str], api_key: Option
                     entry.translated_text = translations[0]
                     entry.status = TranslationStatus.TRANSLATED
 
-                    # Validate translation
-                    result = validator.validate_entry(entry)
-                    if result.issues:
-                        click.echo(f"  WARNING: Validation issues: {len(result.issues)} errors")
+                    # Skip validation during translation to keep output clean
 
             except Exception as e:
                 click.echo(f"  Error: {e}")
@@ -247,16 +241,48 @@ def translate(project: str, provider: str, model: Optional[str], api_key: Option
     except Exception as e:
         click.echo(f"Warning: Could not save project: {e}")
 
-    # Show translation results
-    click.echo("\nTranslation Results:")
+    # Run validation on translated entries
+    validation_issues = 0
+    validation_warnings = 0
+
+    click.echo("\nValidating translations...")
+    for entry in pending_entries:
+        if entry.translated_text:
+            result = validator.validate_entry(entry)
+            validation_issues += len(result.issues)
+            validation_warnings += len(result.warnings)
+
+    if validation_issues > 0 or validation_warnings > 0:
+        click.echo(f"Validation: {validation_issues} issues, {validation_warnings} warnings found")
+    else:
+        click.echo("Validation: All translations look good!")
+
+    # Show translation results summary
+    translated_count = len([e for e in pending_entries if e.translated_text])
+    failed_count = len(pending_entries) - translated_count
+
+    click.echo(f"\nTranslation Summary:")
+    click.echo("-" * 40)
+    click.echo(f"Successfully translated: {translated_count}")
+    click.echo(f"Failed: {failed_count}")
+    if validation_issues > 0:
+        click.echo(f"Validation issues: {validation_issues}")
+    if validation_warnings > 0:
+        click.echo(f"Validation warnings: {validation_warnings}")
+
+    # Show sample results
+    click.echo(f"\nSample Results (first 3):")
     click.echo("-" * 40)
 
-    for entry in pending_entries:
+    for i, entry in enumerate(pending_entries[:3]):
         click.echo(f"Key: {entry.key}")
         click.echo(f"Source: {entry.source_text}")
         click.echo(f"Translation: {entry.translated_text or '(failed)'}")
         click.echo(f"Status: {entry.status.value}")
         click.echo()
+
+    if len(pending_entries) > 3:
+        click.echo(f"... and {len(pending_entries) - 3} more entries translated")
 
 
 @cli.command()
