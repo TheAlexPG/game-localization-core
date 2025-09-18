@@ -97,11 +97,12 @@ def init(name: str, source_lang: str, target_lang: str, source_format: str,
 @click.option('--model', help='Model name (provider-specific)')
 @click.option('--api-key', help='API key for provider (if required)')
 @click.option('--api-url', help='API URL for local provider')
+@click.option('--threads', '-t', default=1, help='Number of parallel threads (default: 1)')
 @click.option('--batch-size', default=5, help='Number of texts to translate at once')
 @click.option('--max-entries', type=int, help='Maximum entries to translate (for testing)')
 @click.option('--patterns', help='Custom validation patterns file (CSV/Excel/JSON)')
 def translate(project: str, provider: str, model: Optional[str], api_key: Optional[str],
-              api_url: Optional[str], batch_size: int, max_entries: Optional[int], patterns: Optional[str]):
+              api_url: Optional[str], threads: int, batch_size: int, max_entries: Optional[int], patterns: Optional[str]):
     """Translate pending entries using AI"""
 
     # Load project
@@ -191,48 +192,96 @@ def translate(project: str, provider: str, model: Optional[str], api_key: Option
         ) as progress:
             task = progress.add_task("Translating entries...", total=len(pending_entries))
 
-            for entry in pending_entries:
+            # Create batches
+            batches = [pending_entries[i:i + batch_size] for i in range(0, len(pending_entries), batch_size)]
+
+            # Define batch translation function
+            def translate_batch(batch):
                 try:
-                    # Simulate translation (replace with real translation logic)
+                    # Extract texts from batch
+                    texts = [entry.source_text for entry in batch]
+
+                    # Translate batch
                     translations = ai_provider.translate_texts(
-                        [entry.source_text],
+                        texts,
                         source_lang=config.source_lang,
                         target_lang=config.target_lang,
                         glossary=project_obj.glossary,
                         context=project_obj.format_context_for_prompt('project')
                     )
 
-                    if translations:
-                        entry.translated_text = translations[0]
-                        entry.status = TranslationStatus.TRANSLATED
+                    # Update entries with translations
+                    for entry, translation in zip(batch, translations):
+                        if translation:
+                            entry.translated_text = translation
+                            entry.status = TranslationStatus.TRANSLATED
 
-                        # Skip validation during translation to keep progress bar clean
-
-                    progress.advance(task)
-
+                    return len(batch)  # Return number of processed entries
                 except Exception as e:
-                    click.echo(f"Error translating '{entry.key}': {e}")
-    else:
-        for i, entry in enumerate(pending_entries, 1):
-            click.echo(f"Translating {i}/{len(pending_entries)}: {entry.key}")
+                    click.echo(f"Error translating batch: {e}")
+                    return len(batch)  # Still count as processed for progress
 
+            # Process batches with threading
+            from concurrent.futures import ThreadPoolExecutor, as_completed
+            with ThreadPoolExecutor(max_workers=threads) as executor:
+                future_to_batch = {executor.submit(translate_batch, batch): batch for batch in batches}
+
+                for future in as_completed(future_to_batch):
+                    try:
+                        processed_count = future.result()
+                        # Update progress for all entries in the batch
+                        for _ in range(processed_count):
+                            progress.advance(task)
+                    except Exception as e:
+                        # Get batch size from the failed future
+                        batch = future_to_batch[future]
+                        for _ in range(len(batch)):
+                            progress.advance(task)
+    else:
+        # Process in batches without rich progress bar using threading
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+
+        # Create batches
+        batches = [pending_entries[i:i + batch_size] for i in range(0, len(pending_entries), batch_size)]
+
+        click.echo(f"Processing {len(batches)} batches with {threads} threads...")
+
+        def translate_batch(batch_info):
+            batch, batch_num = batch_info
             try:
+                # Extract texts from batch
+                texts = [entry.source_text for entry in batch]
+
+                # Translate batch
                 translations = ai_provider.translate_texts(
-                    [entry.source_text],
+                    texts,
                     source_lang=config.source_lang,
                     target_lang=config.target_lang,
                     glossary=project_obj.glossary,
                     context=project_obj.format_context_for_prompt('project')
                 )
 
-                if translations:
-                    entry.translated_text = translations[0]
-                    entry.status = TranslationStatus.TRANSLATED
+                # Update entries with translations
+                for entry, translation in zip(batch, translations):
+                    if translation:
+                        entry.translated_text = translation
+                        entry.status = TranslationStatus.TRANSLATED
 
-                    # Skip validation during translation to keep output clean
-
+                return batch_num, len(batch), True  # batch_num, processed_count, success
             except Exception as e:
-                click.echo(f"  Error: {e}")
+                return batch_num, len(batch), False  # batch_num, processed_count, success
+
+        # Process batches with threading
+        with ThreadPoolExecutor(max_workers=threads) as executor:
+            batch_infos = [(batch, i + 1) for i, batch in enumerate(batches)]
+            future_to_info = {executor.submit(translate_batch, info): info for info in batch_infos}
+
+            completed = 0
+            for future in as_completed(future_to_info):
+                batch_num, processed_count, success = future.result()
+                completed += 1
+                status = "✓" if success else "✗"
+                click.echo(f"Batch {batch_num}/{len(batches)} {status} ({processed_count} entries) - {completed}/{len(batches)} completed")
 
     # Save project with updated translations
     try:
