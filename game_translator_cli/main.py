@@ -882,6 +882,90 @@ def pipeline(project: str, provider: str, model: Optional[str], api_key: Optiona
 
 
 @cli.command()
+@click.option('--project', '-p', required=True, help='Project name or path')
+@click.option('--format', '-f', type=click.Choice(['json', 'csv', 'excel']),
+              default='json', help='Export format (default: json)')
+@click.option('--output', '-o', help='Output file path')
+@click.option('--ignore-validation', is_flag=True,
+              help='Export invalid translations as-is (default: use original for invalid)')
+def export(project: str, format: str, output: Optional[str], ignore_validation: bool):
+    """Export translations to file
+
+    By default, entries that fail validation will use original text.
+    Use --ignore-validation to export translations even if they have validation errors.
+    """
+    import sys
+    from game_translator.core.project import TranslationProject
+    from game_translator.exporters import get_exporter
+
+    try:
+        # Load project
+        proj_path = _get_project_path(project)
+        if not proj_path.exists():
+            click.echo(f"Error: Project '{project}' not found", err=True)
+            sys.exit(1)
+
+        # Initialize project
+        proj = TranslationProject.load(project, proj_path)
+
+        # Run validation if not ignoring
+        validation_results = None
+        if not ignore_validation:
+            validator = TranslationValidator()
+            validation_results = validator.validate_project(proj)
+
+            if validation_results.has_issues:
+                click.echo(f"Warning: Found {len(validation_results.issues)} validation issues")
+
+        # Prepare export data
+        export_data = proj.export_for_review()
+
+        # If not ignoring validation, replace invalid translations with source
+        if not ignore_validation and validation_results:
+            invalid_keys = {issue.key for issue in validation_results.issues}
+            for entry in export_data['entries']:
+                if entry['key'] in invalid_keys:
+                    # Use source text instead of translation for invalid entries
+                    entry['translation'] = entry['source']
+                    if RICH_AVAILABLE:
+                        console.print(f"[yellow]Warning[/yellow] Using original for: {entry['key']}")
+
+        # Determine output path
+        if not output:
+            output_name = f"{proj.config.name}_export_{proj.config.target_lang}"
+            if format == 'json':
+                output = proj_path / 'output' / f"{output_name}.json"
+            elif format == 'csv':
+                output = proj_path / 'output' / f"{output_name}.csv"
+            elif format == 'excel':
+                output = proj_path / 'output' / f"{output_name}.xlsx"
+        else:
+            output = Path(output)
+
+        # Export using appropriate exporter
+        exporter = get_exporter(format)
+        exporter.export(export_data, output, glossary=proj.glossary)
+
+        # Summary
+        if RICH_AVAILABLE:
+            console.print(Panel.fit(
+                f"[green]OK[/green] Export completed\n"
+                f"[dim]Output:[/dim] {output}\n"
+                f"[dim]Format:[/dim] {format.upper()}\n"
+                f"[dim]Validation:[/dim] {'Ignored' if ignore_validation else 'Applied'}",
+                title="Export Successful"
+            ))
+        else:
+            click.echo(f"OK: Exported to {output}")
+            click.echo(f"  Format: {format.upper()}")
+            click.echo(f"  Validation: {'Ignored' if ignore_validation else 'Applied'}")
+
+    except Exception as e:
+        click.echo(f"\n❌ Export error: {e}", err=True)
+        sys.exit(1)
+
+
+@cli.command()
 @click.option('--template', type=click.Choice(['csv', 'excel', 'json']),
               default='excel', help='Template format to create')
 @click.option('--output', '-o', help='Output file path')
