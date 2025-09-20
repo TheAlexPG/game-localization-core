@@ -339,7 +339,10 @@ def translate(project: str, provider: str, model: Optional[str], api_key: Option
 @click.option('--patterns', help='Custom validation patterns file')
 @click.option('--strict', is_flag=True, help='Use strict validation mode')
 @click.option('--output', '-o', help='Save validation report to file')
-def validate(project: str, patterns: Optional[str], strict: bool, output: Optional[str]):
+@click.option('--ignore-update-status', is_flag=True,
+              help='Do not update status to pending for validation errors (default: update status)')
+def validate(project: str, patterns: Optional[str], strict: bool, output: Optional[str],
+             ignore_update_status: bool):
     """Validate translations for quality and consistency"""
 
     proj_path = _get_project_path(project)
@@ -369,99 +372,118 @@ def validate(project: str, patterns: Optional[str], strict: bool, output: Option
 
     validator = TranslationValidator(**validator_kwargs)
 
-    # Create demo entries for validation
-    demo_entries = [
-        TranslationEntry(
-            key="good_example",
-            source_text="Level {level} completed",
-            translated_text="Рівень {level} завершено",
-            status=TranslationStatus.TRANSLATED
-        ),
-        TranslationEntry(
-            key="missing_placeholder",
-            source_text="Player {name} has {coins} coins",
-            translated_text="Гравець має монети",  # Missing placeholders
-            status=TranslationStatus.TRANSLATED
-        ),
-        TranslationEntry(
-            key="html_tag_issue",
-            source_text="Click <b>here</b> to continue",
-            translated_text="Натисніть тут для продовження",  # Missing tags
-            status=TranslationStatus.TRANSLATED
-        )
-    ]
+    # Load actual project
+    from game_translator.core.project import TranslationProject
 
-    click.echo(f"Validating {len(demo_entries)} entries...")
+    try:
+        proj = TranslationProject.load(project, proj_path)
+    except Exception as e:
+        click.echo(f"Error loading project: {e}", err=True)
+        return
+
+    click.echo(f"Validating {len(proj.entries)} entries...")
 
     # Run validation
     total_issues = 0
     total_warnings = 0
+    entries_with_issues = []
 
     if RICH_AVAILABLE:
-        table = Table(title="Validation Results")
-        table.add_column("Entry", style="cyan")
-        table.add_column("Status", style="magenta")
-        table.add_column("Issues", style="red")
-        table.add_column("Warnings", style="yellow")
+        from rich.progress import track
 
-        for entry in demo_entries:
+        # Validate all entries with progress bar
+        for entry in track(proj.entries.values(), description="Validating..."):
             result = validator.validate_entry(entry)
-            total_issues += len(result.issues)
+            if result.issues:
+                total_issues += len(result.issues)
+                entries_with_issues.append(entry.key)
             total_warnings += len(result.warnings)
 
-            status = "OK" if not result.issues else "Issues"
-            table.add_row(
-                entry.key,
-                status,
-                str(len(result.issues)),
-                str(len(result.warnings))
-            )
+        # Show summary table
+        table = Table(title="Validation Summary")
+        table.add_column("Type", style="cyan")
+        table.add_column("Count", style="magenta", justify="right")
+
+        table.add_row("Total Entries", str(len(proj.entries)))
+        table.add_row("Entries with Issues", str(len(entries_with_issues)))
+        table.add_row("Total Issues", str(total_issues))
+        table.add_row("Total Warnings", str(total_warnings))
 
         console.print(table)
 
+        # Show first 10 problematic entries
+        if entries_with_issues[:10]:
+            console.print("\n[yellow]First 10 entries with issues:[/yellow]")
+            for key in entries_with_issues[:10]:
+                console.print(f"  - {key}")
+            if len(entries_with_issues) > 10:
+                console.print(f"  ... and {len(entries_with_issues) - 10} more")
+
+        # Update status by default (unless ignored)
+        if not ignore_update_status and entries_with_issues:
+            console.print(f"\n[yellow]Updating status to PENDING for {len(entries_with_issues)} entries with issues...[/yellow]")
+            for key in entries_with_issues:
+                if key in proj.entries:
+                    proj.entries[key].status = TranslationStatus.PENDING
+            proj._save_project_state()
+            console.print("[green]Status updated and saved![/green]")
+        elif ignore_update_status and entries_with_issues:
+            console.print(f"\n[dim]Status update skipped (--ignore-update-status flag used)[/dim]")
+
         # Quality metrics
-        quality_score = 85 - (total_issues * 10) - (total_warnings * 2)  # Demo calculation
+        quality_score = max(0, 100 - (len(entries_with_issues) / len(proj.entries) * 100))
         quality_grade = QualityMetrics.get_quality_grade(quality_score)
 
         console.print(Panel.fit(
             f"[bold]Summary[/bold]\n"
-            f"Entries checked: {len(demo_entries)}\n"
+            f"Entries checked: {len(proj.entries)}\n"
             f"Issues found: {total_issues}\n"
             f"Warnings: {total_warnings}\n"
-            f"Quality score: {quality_score}/100 (Grade: {quality_grade})",
+            f"Quality score: {quality_score:.1f}/100 (Grade: {quality_grade})",
             title="Validation Summary"
         ))
 
     else:
-        click.echo("Validation Results:")
-        click.echo("-" * 30)
-
-        for entry in demo_entries:
+        # Non-RICH validation
+        for i, entry in enumerate(proj.entries.values()):
+            if i % 1000 == 0:
+                click.echo(f"Validating... {i}/{len(proj.entries)}")
             result = validator.validate_entry(entry)
-            total_issues += len(result.issues)
+            if result.issues:
+                total_issues += len(result.issues)
+                entries_with_issues.append(entry.key)
             total_warnings += len(result.warnings)
 
-            click.echo(f"Entry: {entry.key}")
-            if result.issues:
-                click.echo(f"  ERROR: {len(result.issues)} issues found")
-                for issue in result.issues:
-                    click.echo(f"    - {issue.message}")
-            else:
-                click.echo(f"  OK: No issues")
+        click.echo("\nValidation Summary:")
+        click.echo("-" * 30)
+        click.echo(f"  Total Entries: {len(proj.entries)}")
+        click.echo(f"  Entries with Issues: {len(entries_with_issues)}")
+        click.echo(f"  Total Issues: {total_issues}")
+        click.echo(f"  Total Warnings: {total_warnings}")
 
-            if result.warnings:
-                click.echo(f"  WARNING: {len(result.warnings)} warnings")
-            click.echo()
+        # Show first 10 problematic entries
+        if entries_with_issues:
+            click.echo("\nFirst 10 entries with issues:")
+            for key in entries_with_issues[:10]:
+                click.echo(f"  - {key}")
+            if len(entries_with_issues) > 10:
+                click.echo(f"  ... and {len(entries_with_issues) - 10} more")
 
-        # Summary
-        quality_score = 85 - (total_issues * 10) - (total_warnings * 2)
+        # Update status by default (unless ignored)
+        if not ignore_update_status and entries_with_issues:
+            click.echo(f"\nUpdating status to PENDING for {len(entries_with_issues)} entries with issues...")
+            for key in entries_with_issues:
+                if key in proj.entries:
+                    proj.entries[key].status = TranslationStatus.PENDING
+            proj._save_project_state()
+            click.echo("Status updated and saved!")
+        elif ignore_update_status and entries_with_issues:
+            click.echo("\nStatus update skipped (--ignore-update-status flag used)")
+
+        # Quality score
+        quality_score = max(0, 100 - (len(entries_with_issues) / len(proj.entries) * 100))
         quality_grade = QualityMetrics.get_quality_grade(quality_score)
-
-        click.echo("Summary:")
-        click.echo(f"  Entries: {len(demo_entries)}")
-        click.echo(f"  Issues: {total_issues}")
-        click.echo(f"  Warnings: {total_warnings}")
-        click.echo(f"  Quality: {quality_score}/100 (Grade: {quality_grade})")
+        click.echo(f"\nQuality: {quality_score:.1f}/100 (Grade: {quality_grade})")
 
 
 @cli.command()
