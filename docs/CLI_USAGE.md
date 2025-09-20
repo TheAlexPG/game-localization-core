@@ -21,8 +21,9 @@ python cli.py --help
 Available commands:
 - `init` - Initialize new translation project
 - `translate` - Translate text using AI providers
-- `validate` - Check translation quality and consistency
-- `status` - Show project statistics
+- `validate` - Check translation quality and consistency (updates status by default)
+- `status` - Show project statistics (real-time data)
+- `export` - Export translations to various formats (with validation handling)
 - `create-patterns` - Generate custom validation pattern templates
 - `context` - Manage project and glossary context for better translations
 
@@ -111,7 +112,7 @@ python cli.py translate \
 
 ### 3. Validate Translations
 
-Check translation quality, consistency, and markup preservation.
+Check translation quality, consistency, and markup preservation. By default, updates status to PENDING for entries with validation errors.
 
 ```bash
 python cli.py validate --project "my-game"
@@ -122,6 +123,7 @@ python cli.py validate --project "my-game"
 - `--patterns`: Custom validation patterns file
 - `--strict`: Enable strict validation mode
 - `--output, -o`: Save validation report to file
+- `--ignore-update-status`: Don't update status for failed entries (only check)
 
 **Examples:**
 
@@ -141,31 +143,39 @@ python cli.py validate \
 
 **Sample Output:**
 ```
-Validating 150 entries...
+Validating 72035 entries...
+Validating... ---------------------------------------- 100% 0:00:00
 
-Validation Results:
-------------------------------
-Entry: welcome_msg
-  OK: No issues
+      Validation Summary
+┏━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━┓
+┃ Type                ┃ Count ┃
+┡━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━┩
+│ Total Entries       │ 72035 │
+│ Entries with Issues │  1593 │
+│ Total Issues        │  1650 │
+│ Total Warnings      │   315 │
+└─────────────────────┴───────┘
 
-Entry: level_complete
-  ERROR: 1 issues found
-    - Regular placeholders mismatch. Missing: {score}
+First 10 entries with issues:
+  - page_1001_72
+  - page_1001_511
+  - page_1001_512
+  ...
 
-Entry: menu_text
-  WARNING: 1 warnings
-    - Translation identical to source text
+Updating status to PENDING for 1593 entries with issues...
+Status updated and saved!
 
-Summary:
-  Entries: 150
-  Issues: 12
-  Warnings: 5
-  Quality: 85/100 (Grade: B)
+Quality score: 97.8/100 (Grade: A)
+```
+
+**Just Check Without Updating:**
+```bash
+python cli.py validate --project "my-game" --ignore-update-status
 ```
 
 ### 4. Project Status
 
-Display project statistics and completion progress.
+Display real-time project statistics and completion progress.
 
 ```bash
 python cli.py status --project "my-game"
@@ -173,20 +183,60 @@ python cli.py status --project "my-game"
 
 **Sample Output:**
 ```
-Project: my-game
-Source: en -> uk
+      Project: x4-foundation
+┏━━━━━━━━━━━━┳━━━━━━━┳━━━━━━━━━━━━┓
+┃ Status     ┃ Count ┃ Percentage ┃
+┡━━━━━━━━━━━━╇━━━━━━━╇━━━━━━━━━━━━┩
+│ Total      │ 72035 │     100.0% │
+│ Pending    │  1593 │       2.2% │
+│ Translated │ 70442 │      97.8% │
+│ Reviewed   │     0 │       0.0% │
+│ Approved   │     0 │       0.0% │
+└────────────┴───────┴────────────┘
 
-Statistics:
-  Total entries: 150
-  Pending: 45 (30.0%)
-  Translated: 85 (56.7%)
-  Reviewed: 15 (10.0%)
-  Approved: 5 (3.3%)
-
-Completion: 70.0%
+Completion: 97.8%
 ```
 
-### 5. Create Pattern Templates
+### 5. Export Translations
+
+Export translations to various formats. By default, replaces invalid translations with original text for safety.
+
+```bash
+python cli.py export --project "my-game" --format json
+```
+
+**Options:**
+- `--project, -p` *(required)*: Project name or path
+- `--format, -f`: Export format (`json`, `csv`, `excel`) (default: `json`)
+- `--output, -o`: Custom output file path
+- `--ignore-validation`: Export translations as-is, even with errors (risky)
+
+**Examples:**
+
+**Safe Export (default):**
+```bash
+# Exports to projects/my-game/output/my-game_export_{lang}.json
+python cli.py export --project "my-game" --format json
+```
+Invalid translations are replaced with original text to ensure game stability.
+
+**Export Everything As-Is:**
+```bash
+python cli.py export --project "my-game" --format json --ignore-validation
+```
+Exports all translations including those with validation errors (may break game).
+
+**Export to Excel for Review:**
+```bash
+python cli.py export --project "my-game" --format excel --output "review.xlsx"
+```
+
+**Export to CSV:**
+```bash
+python cli.py export --project "my-game" --format csv
+```
+
+### 6. Create Pattern Templates
 
 Generate template files for custom validation patterns.
 
@@ -220,7 +270,7 @@ special_ids,#\d{4,6},"Special ID numbers like #1234",true
 percentage_vars,%\w+%,"Percentage variables like %PLAYER%",true
 ```
 
-### 6. Manage Context
+### 7. Manage Context
 
 Set additional context information to help AI understand your game better and provide more accurate translations.
 

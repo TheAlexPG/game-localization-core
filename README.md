@@ -79,11 +79,20 @@ game-translator create-patterns --template excel
 # Translate with AI (context automatically included)
 game-translator translate --project "my-game" --provider openai --api-key "sk-..."
 
-# Validate translations
+# Validate translations (updates status to PENDING for failed entries by default)
 game-translator validate --project "my-game" --patterns "patterns.xlsx"
 
-# Check project status
+# Just check validation without updating status
+game-translator validate --project "my-game" --ignore-update-status
+
+# Check project status (shows real statistics)
 game-translator status --project "my-game"
+
+# Export translations (replaces invalid with original by default)
+game-translator export --project "my-game" --format json
+
+# Export with validation errors as-is
+game-translator export --project "my-game" --format json --ignore-validation
 ```
 
 ### Python Library
@@ -306,12 +315,23 @@ provider = get_provider("local",
 
 5. **Validate Quality**
    ```bash
+   # Validate and update status for failed entries
    game-translator validate --project "rpg-game" --strict
+
+   # Or just check without updating status
+   game-translator validate --project "rpg-game" --strict --ignore-update-status
    ```
 
-6. **Export for Review**
+6. **Export for Game**
    ```bash
-   # Results are in projects/rpg-game/output/
+   # Safe export (replaces invalid translations with original)
+   game-translator export --project "rpg-game" --format json
+
+   # Export everything as-is (risky)
+   game-translator export --project "rpg-game" --format json --ignore-validation
+
+   # Export to Excel for review
+   game-translator export --project "rpg-game" --format excel
    ```
 
 ## 🧪 Testing
@@ -327,22 +347,48 @@ pytest --cov=game_translator
 pytest tests/validation/
 ```
 
-## 📈 Quality Metrics
+## 📈 Quality Metrics & Validation
 
 The validation system provides comprehensive quality scoring:
 
+### Validation Output Example
 ```
-Validation Results:
-  Entries: 150
-  Issues: 12
-  Warnings: 5
-  Quality: 85/100 (Grade: B)
+Validation Summary
+┏━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━┓
+┃ Type                ┃ Count ┃
+┡━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━┩
+│ Total Entries       │ 72035 │
+│ Entries with Issues │  1593 │
+│ Total Issues        │  1650 │
+│ Total Warnings      │   315 │
+└─────────────────────┴───────┘
 
-Issues by Type:
-  - Empty translations: 3
-  - Unchanged text: 2
-  - Missing placeholders: 5
-  - Tag mismatches: 2
+Quality score: 97.8/100 (Grade: A)
+```
+
+### Validation Behavior
+- **Default**: Automatically updates status to `PENDING` for entries with validation errors
+- **With `--ignore-update-status`**: Only shows issues without modifying status
+
+### Export Behavior
+- **Default**: Replaces invalid translations with original text (safe for game)
+- **With `--ignore-validation`**: Exports all translations as-is (may break game)
+
+### Status Command
+Shows real-time statistics from your project:
+```
+Project: x4-foundation
+┏━━━━━━━━━━━━┳━━━━━━━┳━━━━━━━━━━━━┓
+┃ Status     ┃ Count ┃ Percentage ┃
+┡━━━━━━━━━━━━╇━━━━━━━╇━━━━━━━━━━━━┩
+│ Total      │ 72035 │     100.0% │
+│ Pending    │  1593 │       2.2% │
+│ Translated │ 70442 │      97.8% │
+│ Reviewed   │     0 │       0.0% │
+│ Approved   │     0 │       0.0% │
+└────────────┴───────┴────────────┘
+
+Completion: 97.8%
 ```
 
 ## 🛠️ Advanced Features
