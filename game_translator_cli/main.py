@@ -468,6 +468,7 @@ def validate(project: str, patterns: Optional[str], strict: bool, output: Option
 @click.option('--project', '-p', required=True, help='Project name or path')
 def status(project: str):
     """Show project status and statistics"""
+    from game_translator.core.project import TranslationProject
 
     proj_path = _get_project_path(project)
     if not proj_path.exists():
@@ -478,16 +479,13 @@ def status(project: str):
     if not config:
         return
 
-    # Demo statistics
-    stats = ProgressStats(
-        total=150,
-        pending=45,
-        translated=85,
-        reviewed=15,
-        approved=5,
-        needs_update=0,
-        skipped=0
-    )
+    # Load actual project and get real statistics
+    try:
+        proj = TranslationProject.load(project, proj_path)
+        stats = proj.get_progress_stats()
+    except Exception as e:
+        click.echo(f"Error loading project: {e}", err=True)
+        return
 
     if RICH_AVAILABLE:
         table = Table(title=f"Project: {config.name}")
