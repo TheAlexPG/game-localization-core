@@ -352,6 +352,116 @@ def translate(project: str, provider: str, model: Optional[str], api_key: Option
 
 @cli.command()
 @click.option('--project', '-p', required=True, help='Project name or path')
+@click.option('--stage', type=click.Choice(['glossary', 'translations', 'all']), required=True,
+              help='Stage to reset: glossary (extract-terms, translate-glossary), translations, or all')
+@click.option('--force', is_flag=True, help='Skip confirmation prompt')
+def reset(project: str, stage: str, force: bool):
+    """Reset project stages to start fresh
+
+    Examples:
+        # Reset only translations to PENDING
+        game-translator reset -p my-game --stage translations
+
+        # Reset glossary (remove extracted terms and translations)
+        game-translator reset -p my-game --stage glossary
+
+        # Reset everything
+        game-translator reset -p my-game --stage all --force
+    """
+    from game_translator.core.project import TranslationProject
+    from game_translator.core.models import TranslationStatus
+    import os
+
+    try:
+        # Load project
+        proj_path = _get_project_path(project)
+        if not proj_path.exists():
+            click.echo(f"Error: Project '{project}' not found", err=True)
+            return
+
+        project_obj = TranslationProject.load(project, proj_path)
+
+        # Show current status
+        status_counts = {}
+        for entry in project_obj.entries.values():
+            status = entry.status.value
+            status_counts[status] = status_counts.get(status, 0) + 1
+
+        click.echo(f"\nProject: {project_obj.config.name}")
+        click.echo("Current status distribution:")
+        for status, count in status_counts.items():
+            click.echo(f"  {status}: {count}")
+
+        # Determine what will be reset
+        actions = []
+        if stage in ['glossary', 'all']:
+            glossary_file = proj_path / "glossary" / "glossary.json"
+            extracted_file = proj_path / "glossary" / "extracted_terms.json"
+            if glossary_file.exists() or extracted_file.exists():
+                actions.append("Remove glossary files (extracted terms and translations)")
+
+        if stage in ['translations', 'all']:
+            pending_count = sum(1 for e in project_obj.entries.values() if e.status != TranslationStatus.PENDING)
+            if pending_count > 0:
+                actions.append(f"Reset {pending_count} entries to PENDING status")
+
+        if not actions:
+            click.echo(f"\nNothing to reset for stage '{stage}'")
+            return
+
+        # Show what will be done
+        click.echo(f"\nActions for stage '{stage}':")
+        for action in actions:
+            click.echo(f"  - {action}")
+
+        # Confirmation
+        if not force:
+            if not click.confirm(f"\nProceed with reset?"):
+                click.echo("Operation cancelled")
+                return
+
+        # Perform reset
+        reset_count = 0
+
+        if stage in ['glossary', 'all']:
+            # Remove glossary files
+            glossary_file = proj_path / "glossary" / "glossary.json"
+            extracted_file = proj_path / "glossary" / "extracted_terms.json"
+
+            if glossary_file.exists():
+                os.remove(glossary_file)
+                click.echo(f"✅ Removed {glossary_file}")
+
+            if extracted_file.exists():
+                os.remove(extracted_file)
+                click.echo(f"✅ Removed {extracted_file}")
+
+            # Clear in-memory glossary
+            project_obj.glossary.clear()
+
+        if stage in ['translations', 'all']:
+            # Reset entry statuses
+            for entry in project_obj.entries.values():
+                if entry.status != TranslationStatus.PENDING:
+                    entry.status = TranslationStatus.PENDING
+                    entry.translated_text = None
+                    entry.translator_notes = None
+                    reset_count += 1
+
+            if reset_count > 0:
+                click.echo(f"✅ Reset {reset_count} entries to PENDING")
+
+        # Save project
+        project_obj._save_project_state()
+
+        click.echo(f"\n🎉 Stage '{stage}' reset completed for project '{project}'")
+
+    except Exception as e:
+        click.echo(f"Error: {e}", err=True)
+
+
+@cli.command()
+@click.option('--project', '-p', required=True, help='Project name or path')
 @click.option('--patterns', help='Custom validation patterns file')
 @click.option('--strict', is_flag=True, help='Use strict validation mode')
 @click.option('--output', '-o', help='Save validation report to file')
@@ -566,8 +676,9 @@ def status(project: str):
 @click.option('--threads', '-t', default=1, help='Number of parallel threads (default: 1)')
 @click.option('--batch-size', default=10, help='Number of texts per batch')
 @click.option('--max-entries', type=int, help='Maximum entries to process (for testing)')
+@click.option('--no-skip-symbols', is_flag=True, help='Do not skip entries with only numbers/symbols')
 def extract_terms(project: str, provider: str, model: Optional[str], api_key: Optional[str],
-                  api_url: Optional[str], threads: int, batch_size: int, max_entries: Optional[int]):
+                  api_url: Optional[str], threads: int, batch_size: int, max_entries: Optional[int], no_skip_symbols: bool):
     """Extract important terms from source texts for glossary building"""
 
     from game_translator.core.project import TranslationProject
@@ -580,9 +691,29 @@ def extract_terms(project: str, provider: str, model: Optional[str], api_key: Op
         project_obj = TranslationProject.load(project)
         click.echo(f"Loaded project: {project_obj.config.name}")
 
-        # Get source entries
+        # Get source entries, filter out technical/system variables
         entries = list(project_obj.entries.values())
-        source_texts = [entry.source_text for entry in entries if entry.source_text]
+
+        # Filter entries that should not be used for term extraction
+        skip_symbols = not no_skip_symbols  # Skip by default unless --no-skip-symbols is used
+        filtered_entries = []
+        skipped_count = 0
+
+        for entry in entries:
+            if entry.source_text:
+                if skip_symbols and entry.should_skip_translation(skip_symbols=True):
+                    skipped_count += 1
+                else:
+                    filtered_entries.append(entry)
+            else:
+                skipped_count += 1
+
+        source_texts = [entry.source_text for entry in filtered_entries]
+
+        if skipped_count > 0 and skip_symbols:
+            click.echo(f"Skipped {skipped_count} entries (technical variables/symbols)")
+        elif skipped_count > 0:
+            click.echo(f"Skipped {skipped_count} entries (empty texts)")
 
         if max_entries:
             source_texts = source_texts[:max_entries]
