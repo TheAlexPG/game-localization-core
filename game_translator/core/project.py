@@ -216,7 +216,7 @@ class TranslationProject:
                     "key": entry.key,
                     "context": entry.context,
                     "source": entry.source_text,
-                    "translation": entry.translated_text,
+                    "translation": entry.translated_text if entry.status != TranslationStatus.SKIPPED else entry.source_text,
                     "status": entry.status.value,
                     "notes": entry.translator_notes,
                     "file": entry.file_path
