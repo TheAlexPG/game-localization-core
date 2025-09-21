@@ -1180,7 +1180,7 @@ def context_show(ctx, project, type):
     try:
         project_obj = TranslationProject.load(project)
 
-        if HAS_RICH:
+        if RICH_AVAILABLE:
             from rich.console import Console
             from rich.panel import Panel
             from rich.syntax import Syntax
