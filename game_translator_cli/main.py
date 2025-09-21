@@ -101,8 +101,9 @@ def init(name: str, source_lang: str, target_lang: str, source_format: str,
 @click.option('--batch-size', default=5, help='Number of texts to translate at once')
 @click.option('--max-entries', type=int, help='Maximum entries to translate (for testing)')
 @click.option('--patterns', help='Custom validation patterns file (CSV/Excel/JSON)')
+@click.option('--no-skip-symbols', is_flag=True, help='Do not skip entries with only numbers/symbols')
 def translate(project: str, provider: str, model: Optional[str], api_key: Optional[str],
-              api_url: Optional[str], threads: int, batch_size: int, max_entries: Optional[int], patterns: Optional[str]):
+              api_url: Optional[str], threads: int, batch_size: int, max_entries: Optional[int], patterns: Optional[str], no_skip_symbols: bool):
     """Translate pending entries using AI"""
 
     # Load project
@@ -164,6 +165,21 @@ def translate(project: str, provider: str, model: Optional[str], api_key: Option
         # Get pending entries
         all_entries = list(project_obj.entries.values())
         pending_entries = [entry for entry in all_entries if entry.status == TranslationStatus.PENDING]
+
+        # Filter out entries that should be skipped (numbers/symbols)
+        skip_symbols = not no_skip_symbols  # Skip by default unless --no-skip-symbols is used
+        if skip_symbols:
+            skipped_entries = []
+            translatable_entries = []
+            for entry in pending_entries:
+                if entry.should_skip_translation(skip_symbols=True):
+                    entry.status = TranslationStatus.SKIPPED
+                    skipped_entries.append(entry)
+                else:
+                    translatable_entries.append(entry)
+            pending_entries = translatable_entries
+            if skipped_entries:
+                click.echo(f"Skipped {len(skipped_entries)} entries (numbers/symbols only)")
 
         if max_entries:
             pending_entries = pending_entries[:max_entries]

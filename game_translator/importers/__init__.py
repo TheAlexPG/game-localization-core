@@ -22,5 +22,8 @@ def get_importer(format: str) -> BaseImporter:
 
 # Import and register available importers
 from .json_importer import JsonImporter
+from .csv_importer import CSVImporter, TSVImporter
 
 register_importer("json", JsonImporter)
+register_importer("csv", CSVImporter)
+register_importer("tsv", TSVImporter)

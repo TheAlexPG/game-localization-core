@@ -132,6 +132,45 @@ print(f"Quality Score: {results.quality_metrics.overall_score}/100")
 project.export_table("translations.xlsx")
 ```
 
+## 📄 Supported File Formats
+
+### CSV Import
+
+The CSV importer automatically detects column names for translation data.
+
+**Supported column names:**
+- **Key/ID column** (required): `key`, `Key`, `KEY`, `id`, `Id`, `ID`
+- **Source text column** (required): `source`, `Source`, `SOURCE`, `text`, `Text`, `TEXT`, `original`, `Original`
+- **Target/translation column** (optional): `target`, `Target`, `TARGET`, `translation`, `Translation`, `translated`
+- **Context column** (optional): `context`, `Context`, `CONTEXT`, `description`, `Description`
+
+**CSV file requirements:**
+- First row must contain column headers
+- UTF-8 encoding (with or without BOM)
+- Comma (`,`) or tab (`\t`) separated values
+- At minimum must have a key column and source text column
+
+**Example CSV structure:**
+```csv
+key,source,target
+/ID001,Hello World,Привіт Світ
+/ID002,New Game,Нова гра
+/ID003,Settings,Налаштування
+```
+
+**Note:** If your CSV uses different column names (e.g., `string_id`, `en_US`, `uk_UA`), you'll need to rename them to match supported names or modify the CSV importer.
+
+### JSON Format
+
+Standard JSON format with key-value pairs:
+```json
+{
+  "menu.new_game": "New Game",
+  "menu.load_game": "Load Game",
+  "menu.settings": "Settings"
+}
+```
+
 ## 🔧 Configuration
 
 ### Environment Variables

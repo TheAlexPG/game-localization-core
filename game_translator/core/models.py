@@ -51,6 +51,45 @@ class TranslationEntry:
         # Technical if empty after cleanup or just numbers
         return len(clean) < 3 or clean.isdigit()
 
+    def should_skip_translation(self, skip_symbols: bool = True) -> bool:
+        """Check if this entry should be skipped from translation
+
+        Args:
+            skip_symbols: If True, skip entries that are just numbers or symbols
+
+        Returns:
+            True if entry should be skipped
+        """
+        if not skip_symbols:
+            return False
+
+        text = self.source_text.strip()
+
+        # Skip if empty
+        if not text:
+            return True
+
+        # Skip if only numbers
+        if text.replace(',', '').replace('.', '').replace(' ', '').isdigit():
+            return True
+
+        # Skip if only symbols (including variables like {1}, ${1}, etc)
+        # but preserve actual text with variables
+        import re
+        # Remove known variable patterns
+        clean = re.sub(r'\{[^}]+\}|\$:\s*\{[^}]+\}|\$\{[^}]+\}|\$[^$]+\$', '', text)
+        clean = clean.strip()
+
+        # If nothing left after removing variables, it's just variables
+        if not clean:
+            return True
+
+        # Check if remaining is just punctuation/symbols
+        if all(c in ' ,.!?;:()[]{}"\'-_=+*&^%$#@~/\\|<>' for c in clean):
+            return True
+
+        return False
+
     def needs_update(self, new_source: str) -> bool:
         """Check if source has changed"""
         return self._calculate_hash(new_source) != self.source_hash
