@@ -854,8 +854,9 @@ def extract_terms(project: str, provider: str, model: Optional[str], api_key: Op
 @click.option('--threads', '-t', default=1, help='Number of parallel threads (default: 1)')
 @click.option('--batch-size', default=10, help='Number of terms per batch')
 @click.option('--input-file', help='Input file with extracted terms (default: extracted_terms.json)')
+@click.option('--max-entries', type=int, help='Maximum entries to translate (for testing)')
 def translate_glossary(project: str, provider: str, model: Optional[str], api_key: Optional[str],
-                       api_url: Optional[str], threads: int, batch_size: int, input_file: Optional[str]):
+                       api_url: Optional[str], threads: int, batch_size: int, input_file: Optional[str], max_entries: Optional[int]):
     """Translate extracted glossary terms"""
 
     from game_translator.core.project import TranslationProject
@@ -889,6 +890,12 @@ def translate_glossary(project: str, provider: str, model: Optional[str], api_ke
         if not terms_to_translate:
             click.echo("All terms are already translated!")
             return
+
+        # Apply max_entries limit if specified
+        if max_entries:
+            original_count = len(terms_to_translate)
+            terms_to_translate = terms_to_translate[:max_entries]
+            click.echo(f"Limited to {len(terms_to_translate)} terms (from {original_count} total)")
 
         click.echo(f"Translating {len(terms_to_translate)} terms...")
 
