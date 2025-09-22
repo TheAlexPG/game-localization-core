@@ -823,7 +823,21 @@ def extract_terms(project: str, provider: str, model: Optional[str], api_key: Op
                         completed_batches += 1
 
         # Save extracted terms to project
-        extracted_terms = list(all_terms)
+        # Filter out system variables and technical terms from extracted terms
+        from game_translator.core.models import TranslationEntry
+
+        filtered_terms = []
+        filtered_out = 0
+
+        for term in all_terms:
+            # Create temporary entry to use skip logic
+            temp_entry = TranslationEntry(key='temp', source_text=term)
+            if not temp_entry.should_skip_translation(skip_symbols=True):
+                filtered_terms.append(term)
+            else:
+                filtered_out += 1
+
+        extracted_terms = filtered_terms
         extracted_terms_data = {term: {"source": term, "translated": None, "context": "extracted"} for term in extracted_terms}
 
         # Save to extracted terms file
@@ -832,7 +846,12 @@ def extract_terms(project: str, provider: str, model: Optional[str], api_key: Op
         with open(extracted_file, 'w', encoding='utf-8') as f:
             json.dump(extracted_terms_data, f, indent=2, ensure_ascii=False)
 
-        click.echo(f"\nExtracted {len(extracted_terms)} unique terms")
+        if filtered_out > 0:
+            click.echo(f"\nExtracted {len(all_terms)} terms, filtered out {filtered_out} system variables")
+            click.echo(f"Final: {len(extracted_terms)} unique terms")
+        else:
+            click.echo(f"\nExtracted {len(extracted_terms)} unique terms")
+
         click.echo(f"Saved to: {extracted_file}")
         click.echo("\nSample terms:")
         for term in list(extracted_terms)[:10]:
@@ -916,12 +935,33 @@ def translate_glossary(project: str, provider: str, model: Optional[str], api_ke
         # Translate in batches with threading
         def translate_batch(terms_batch):
             try:
-                # translate_glossary_structured returns Dict[str, str], not List[str]
-                translations_dict = ai_provider.translate_glossary_structured(
-                    terms_batch,
-                    config.source_lang,
-                    config.target_lang
-                )
+                # Filter out system variables and technical terms before sending to API
+                from game_translator.core.models import TranslationEntry
+
+                filtered_batch = []
+                skipped_terms = {}
+
+                for term in terms_batch:
+                    # Create temporary entry to use skip logic
+                    temp_entry = TranslationEntry(key='temp', source_text=term)
+                    if temp_entry.should_skip_translation(skip_symbols=True):
+                        # For skipped terms, use original as translation
+                        skipped_terms[term] = term
+                    else:
+                        filtered_batch.append(term)
+
+                # Only translate non-skipped terms
+                translations_dict = {}
+                if filtered_batch:
+                    translations_dict = ai_provider.translate_glossary_structured(
+                        filtered_batch,
+                        config.source_lang,
+                        config.target_lang
+                    )
+
+                # Add skipped terms with original text as translation
+                translations_dict.update(skipped_terms)
+
                 return translations_dict
             except Exception as e:
                 click.echo(f"Error in batch: {e}")
@@ -974,10 +1014,15 @@ def translate_glossary(project: str, provider: str, model: Optional[str], api_ke
         # Save as project glossary
         glossary = {term: translation for term, translation in translated_terms.items()
                    if translation}
+
+        # Count skipped terms (where translation equals original)
+        skipped_count = sum(1 for term, trans in translated_terms.items() if term == trans)
+        actually_translated = len(translated_terms) - skipped_count
+
         project_obj.glossary.update(glossary)
         project_obj.save_glossary()
 
-        click.echo(f"\nTranslated {len(translated_terms)} terms")
+        click.echo(f"\nTranslated {actually_translated} terms ({skipped_count} system variables kept as-is)")
         click.echo(f"Updated: {input_file}")
         click.echo(f"Glossary saved to project")
         click.echo("\nSample translations:")
