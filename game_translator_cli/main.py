@@ -3,8 +3,16 @@
 
 import click
 import json
+import os
 from pathlib import Path
 from typing import Optional, List
+
+# Load environment variables from .env file
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass  # dotenv not installed, will use system env vars only
 
 # Try to import rich for better output
 try:
@@ -747,8 +755,8 @@ def extract_terms(project: str, provider: str, model: Optional[str], api_key: Op
 
         # Initialize provider
         provider_kwargs = {}
-        if api_key:
-            provider_kwargs['api_key'] = api_key
+        # Pass api_key even if None - let provider check env vars
+        provider_kwargs['api_key'] = api_key
         if model:
             provider_kwargs['model_name'] = model
         if api_url and provider == 'local':
@@ -886,8 +894,8 @@ def translate_glossary(project: str, provider: str, model: Optional[str], api_ke
 
         # Initialize provider
         provider_kwargs = {}
-        if api_key:
-            provider_kwargs['api_key'] = api_key
+        # Pass api_key even if None - let provider check env vars
+        provider_kwargs['api_key'] = api_key
         if model:
             provider_kwargs['model_name'] = model
         if api_url and provider == 'local':

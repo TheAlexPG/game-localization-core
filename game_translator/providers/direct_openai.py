@@ -148,7 +148,7 @@ CRITICAL FORMATTING RULES:
                 }
             ],
             "temperature": self.temperature,
-            "max_tokens": 2000
+            "max_completion_tokens": 2000
         }
 
         # Add structured output if requested and model supports it
