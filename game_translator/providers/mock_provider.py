@@ -80,6 +80,22 @@ class MockTranslationProvider(BaseTranslationProvider):
 
         return result
 
+    def translate_glossary_structured(self, terms: List[str], source_lang: str, target_lang: str,
+                                    context: Optional[str] = None) -> Dict[str, str]:
+        """Mock glossary translation with simple transformations"""
+        self.call_count += 1
+        time.sleep(self.delay)
+
+        translations = {}
+        for term in terms:
+            if source_lang.lower() == "en" and target_lang.lower() == "uk":
+                translation = self._mock_en_to_uk(term, None)
+            else:
+                translation = f"[{target_lang.upper()}] {term}"
+            translations[term] = translation
+
+        return translations
+
     def validate_connection(self) -> bool:
         """Mock provider is always available"""
         return True

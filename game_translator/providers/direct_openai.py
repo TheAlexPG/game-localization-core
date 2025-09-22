@@ -239,7 +239,8 @@ Text to analyze:
             print(f"Structured term extraction failed: {e}")
             return []
 
-    def translate_glossary_structured(self, terms: List[str], source_lang: str, target_lang: str) -> Dict[str, str]:
+    def translate_glossary_structured(self, terms: List[str], source_lang: str, target_lang: str,
+                                    context: Optional[str] = None) -> Dict[str, str]:
         """Translate glossary terms using structured output"""
         if not terms:
             return {}
@@ -262,7 +263,13 @@ Text to analyze:
         prompt = f"""Translate these video game terms from {source_lang_name} to {target_lang_name}.
 Provide natural {target_lang_name} translations that fit in a fantasy/adventure game setting.
 
-Terms: {', '.join(terms)}
+"""
+
+        # Add glossary context if provided
+        if context:
+            prompt += f"{context}\n\n"
+
+        prompt += f"""Terms: {', '.join(terms)}
 
 Return a JSON object with translations."""
 

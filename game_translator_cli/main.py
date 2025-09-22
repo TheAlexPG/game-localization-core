@@ -955,10 +955,13 @@ def translate_glossary(project: str, provider: str, model: Optional[str], api_ke
                 # Only translate non-skipped terms
                 translations_dict = {}
                 if filtered_batch:
+                    # Get glossary context for better translations
+                    glossary_context = project_obj.format_context_for_prompt('glossary')
                     translations_dict = ai_provider.translate_glossary_structured(
                         filtered_batch,
                         config.source_lang,
-                        config.target_lang
+                        config.target_lang,
+                        context=glossary_context
                     )
 
                 # Add skipped terms with original text as translation
@@ -1025,8 +1028,8 @@ def translate_glossary(project: str, provider: str, model: Optional[str], api_ke
         project_obj.save_glossary()
 
         click.echo(f"\nTranslated {actually_translated} terms ({skipped_count} system variables kept as-is)")
-        click.echo(f"Updated: {input_file}")
-        click.echo(f"Glossary saved to project")
+        click.echo(f"Source: {input_file}")
+        click.echo(f"Glossary saved to project (glossary.json)")
         click.echo("\nSample translations:")
         for term, translation in list(translated_terms.items())[:5]:
             click.echo(f"  {term} -> {translation}")

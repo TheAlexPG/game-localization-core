@@ -49,6 +49,23 @@ class BaseTranslationProvider(ABC):
         except Exception:
             return False
 
+    @abstractmethod
+    def translate_glossary_structured(self, terms: List[str], source_lang: str, target_lang: str,
+                                    context: Optional[str] = None) -> Dict[str, str]:
+        """
+        Translate glossary terms using structured output.
+
+        Args:
+            terms: List of terms to translate
+            source_lang: Source language code/name
+            target_lang: Target language code/name
+            context: Optional glossary context with translation rules
+
+        Returns:
+            Dictionary mapping source terms to translations
+        """
+        pass
+
     def get_info(self) -> Dict[str, str]:
         """Get provider information"""
         return {

@@ -239,7 +239,8 @@ Return a JSON object with extracted terms."""
             except:
                 return []
 
-    def translate_glossary_structured(self, terms: List[str], source_lang: str, target_lang: str) -> Dict[str, str]:
+    def translate_glossary_structured(self, terms: List[str], source_lang: str, target_lang: str,
+                                    context: Optional[str] = None) -> Dict[str, str]:
         """Translate glossary terms using structured output"""
         if not terms:
             return {}
@@ -247,7 +248,13 @@ Return a JSON object with extracted terms."""
         prompt = f"""Translate these video game terms from {source_lang} to {target_lang}.
 Provide natural {target_lang} translations that fit in a fantasy/adventure game setting.
 
-Terms: {', '.join(terms)}
+"""
+
+        # Add glossary context if provided
+        if context:
+            prompt += f"{context}\n\n"
+
+        prompt += f"""Terms: {', '.join(terms)}
 
 Return a JSON object with translations."""
 
