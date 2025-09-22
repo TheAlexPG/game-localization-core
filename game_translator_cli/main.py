@@ -352,18 +352,24 @@ def translate(project: str, provider: str, model: Optional[str], api_key: Option
 
 @cli.command()
 @click.option('--project', '-p', required=True, help='Project name or path')
-@click.option('--stage', type=click.Choice(['glossary', 'translations', 'all']), required=True,
-              help='Stage to reset: glossary (extract-terms, translate-glossary), translations, or all')
+@click.option('--stage', type=click.Choice(['glossary', 'glossary-terms', 'glossary-translations', 'translations', 'all']), required=True,
+              help='Stage to reset: glossary (both files), glossary-terms (extracted terms only), glossary-translations (translations only), translations (main translations), or all')
 @click.option('--force', is_flag=True, help='Skip confirmation prompt')
 def reset(project: str, stage: str, force: bool):
     """Reset project stages to start fresh
 
     Examples:
-        # Reset only translations to PENDING
-        game-translator reset -p my-game --stage translations
+        # Reset only glossary translations (keep extracted terms)
+        game-translator reset -p my-game --stage glossary-translations
 
-        # Reset glossary (remove extracted terms and translations)
+        # Reset only extracted terms
+        game-translator reset -p my-game --stage glossary-terms
+
+        # Reset both glossary files
         game-translator reset -p my-game --stage glossary
+
+        # Reset main translations to PENDING
+        game-translator reset -p my-game --stage translations
 
         # Reset everything
         game-translator reset -p my-game --stage all --force
@@ -394,11 +400,18 @@ def reset(project: str, stage: str, force: bool):
 
         # Determine what will be reset
         actions = []
+        glossary_file = proj_path / "glossary" / "glossary.json"
+        extracted_file = proj_path / "glossary" / "extracted_terms.json"
+
         if stage in ['glossary', 'all']:
-            glossary_file = proj_path / "glossary" / "glossary.json"
-            extracted_file = proj_path / "glossary" / "extracted_terms.json"
             if glossary_file.exists() or extracted_file.exists():
-                actions.append("Remove glossary files (extracted terms and translations)")
+                actions.append("Remove glossary files (both extracted terms and translations)")
+        elif stage == 'glossary-terms':
+            if extracted_file.exists():
+                actions.append("Remove extracted terms file")
+        elif stage == 'glossary-translations':
+            if glossary_file.exists():
+                actions.append("Remove glossary translations file")
 
         if stage in ['translations', 'all']:
             pending_count = sum(1 for e in project_obj.entries.values() if e.status != TranslationStatus.PENDING)
@@ -424,10 +437,7 @@ def reset(project: str, stage: str, force: bool):
         reset_count = 0
 
         if stage in ['glossary', 'all']:
-            # Remove glossary files
-            glossary_file = proj_path / "glossary" / "glossary.json"
-            extracted_file = proj_path / "glossary" / "extracted_terms.json"
-
+            # Remove both glossary files
             if glossary_file.exists():
                 os.remove(glossary_file)
                 click.echo(f"✅ Removed {glossary_file}")
@@ -435,6 +445,21 @@ def reset(project: str, stage: str, force: bool):
             if extracted_file.exists():
                 os.remove(extracted_file)
                 click.echo(f"✅ Removed {extracted_file}")
+
+            # Clear in-memory glossary
+            project_obj.glossary.clear()
+
+        elif stage == 'glossary-terms':
+            # Remove only extracted terms
+            if extracted_file.exists():
+                os.remove(extracted_file)
+                click.echo(f"✅ Removed {extracted_file}")
+
+        elif stage == 'glossary-translations':
+            # Remove only glossary translations
+            if glossary_file.exists():
+                os.remove(glossary_file)
+                click.echo(f"✅ Removed {glossary_file}")
 
             # Clear in-memory glossary
             project_obj.glossary.clear()
@@ -928,18 +953,12 @@ def translate_glossary(project: str, provider: str, model: Optional[str], api_ke
                         click.echo(f"Batch failed: {e}")
                         completed_batches += 1
 
-        # Update terms data with translations
-        for term, translation in translated_terms.items():
-            if term in terms_data:
-                terms_data[term]['translated'] = translation
+        # DON'T update the extracted_terms.json file - keep it clean
+        # Only save translations to glossary.json
 
-        # Save updated terms
-        with open(input_file, 'w', encoding='utf-8') as f:
-            json.dump(terms_data, f, indent=2, ensure_ascii=False)
-
-        # Also save as project glossary
-        glossary = {term: data['translated'] for term, data in terms_data.items()
-                   if data.get('translated')}
+        # Save as project glossary
+        glossary = {term: translation for term, translation in translated_terms.items()
+                   if translation}
         project_obj.glossary.update(glossary)
         project_obj.save_glossary()
 
