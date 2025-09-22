@@ -135,30 +135,38 @@ CRITICAL FORMATTING RULES:
                      response_schema: Optional[Dict] = None) -> str:
         """Make API call to OpenAI with optional structured output"""
 
+        # Use simpler message format like the old working version
         params = {
             "model": self.model_name,
             "messages": [
-                {
-                    "role": "system",
-                    "content": "You are a professional video game translator specializing in English to Ukrainian translation. Provide accurate, natural translations while preserving all formatting and technical elements."
-                },
                 {
                     "role": "user",
                     "content": prompt
                 }
             ],
-            "temperature": self.temperature,
-            "max_completion_tokens": 2000
+            "temperature": self.temperature
         }
+        # Don't set max_tokens/max_completion_tokens - let API use defaults
+        # This was the key difference in the old working version
 
-        # Add structured output if requested and model supports it
-        if use_structured_output and response_schema and "gpt-4" in self.model_name:
+        # Add structured output if requested
+        if use_structured_output and response_schema:
             params["response_format"] = {
                 "type": "json_schema",
                 "json_schema": response_schema
             }
 
-        response = self.client.chat.completions.create(**params)
+        # Make API call with retry logic from old version
+        for attempt in range(self.max_retries):
+            try:
+                response = self.client.chat.completions.create(**params)
+                break
+            except Exception as e:
+                if attempt < self.max_retries - 1:
+                    print(f"API call failed (attempt {attempt + 1}), retrying in {self.retry_delay}s: {e}")
+                    time.sleep(self.retry_delay)
+                else:
+                    raise e
 
         if not response.choices or not response.choices[0].message.content:
             raise Exception("No response from OpenAI")
@@ -236,8 +244,23 @@ Text to analyze:
         if not terms:
             return {}
 
-        prompt = f"""Translate these video game terms from {source_lang} to {target_lang}.
-Provide natural {target_lang} translations that fit in a fantasy/adventure game setting.
+        # Map language codes to full names for better AI understanding
+        lang_mapping = {
+            'uk': 'Ukrainian',
+            'ru': 'Russian',
+            'de': 'German',
+            'fr': 'French',
+            'es': 'Spanish',
+            'it': 'Italian',
+            'pl': 'Polish',
+            'en': 'English'
+        }
+
+        source_lang_name = lang_mapping.get(source_lang, source_lang)
+        target_lang_name = lang_mapping.get(target_lang, target_lang)
+
+        prompt = f"""Translate these video game terms from {source_lang_name} to {target_lang_name}.
+Provide natural {target_lang_name} translations that fit in a fantasy/adventure game setting.
 
 Terms: {', '.join(terms)}
 
