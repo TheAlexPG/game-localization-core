@@ -20,7 +20,7 @@ class DirectOpenAIProvider(BaseTranslationProvider):
     """Direct OpenAI provider based on legacy implementation"""
 
     def __init__(self, api_key: str = None, model_name: str = "gpt-4o-mini",
-                 temperature: float = 0.3, max_parallel: int = 3,
+                 temperature: float = 1.0, max_parallel: int = 3,
                  max_retries: int = 3, retry_delay: int = 2, **kwargs):
         super().__init__(model_name, **kwargs)
 
