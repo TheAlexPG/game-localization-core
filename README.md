@@ -9,7 +9,7 @@ AI-powered universal game localization system with validation and quality contro
 ## 🚀 Features
 
 ### Core Capabilities
-- **🤖 AI Translation**: OpenAI, OpenRouter, DeepSeek, and local models support
+- **🤖 AI Translation**: OpenAI, OpenRouter (200+ models), DeepSeek, and local models support
 - **✅ Smart Validation**: Automatic quality checks with custom patterns
 - **📊 Excel Integration**: Professional workflow with Excel import/export
 - **🔤 Format Preservation**: Maintains placeholders, HTML tags, and game markup
@@ -78,6 +78,9 @@ game-translator create-patterns --template excel
 
 # Translate with AI (context automatically included)
 game-translator translate --project "my-game" --provider openai --api-key "sk-..."
+
+# Or use OpenRouter for access to 200+ models
+game-translator translate --project "my-game" --provider openrouter --model "google/gemini-2.5-flash"
 
 # Validate translations (updates status to PENDING for failed entries by default)
 game-translator validate --project "my-game" --patterns "patterns.xlsx"
@@ -178,7 +181,7 @@ Standard JSON format with key-value pairs:
 # OpenAI
 export OPENAI_API_KEY="sk-your-key"
 
-# OpenRouter
+# OpenRouter (200+ models access)
 export OPENROUTER_API_KEY="sk-or-your-key"
 
 # Local Model
@@ -301,12 +304,34 @@ provider = get_provider("openai",
 
 ### OpenRouter
 ```python
-provider = get_provider("openai",
+provider = get_provider("openrouter",
     api_key="sk-or-...",
-    base_url="https://openrouter.ai/api/v1",
-    model="meta-llama/llama-3.2-90b-text-preview"
+    model="google/gemini-2.5-flash"
 )
 ```
+
+**CLI Usage:**
+```bash
+# Set environment variable
+export OPENROUTER_API_KEY="sk-or-your-key"
+
+# Use with CLI
+game-translator translate --project "my-game" --provider openrouter --model "google/gemini-2.5-flash"
+```
+
+**Features:**
+- Access to 200+ models through OpenRouter
+- No batching (individual requests for each text)
+- Parallel processing with threading
+- Structured output support for compatible models
+- Optional site ranking headers
+
+**Popular Models:**
+- `google/gemini-2.5-flash` - Fast and reliable (default)
+- `anthropic/claude-3.5-sonnet` - High quality translations
+- `meta-llama/llama-3.2-90b-text-preview` - Large context window
+- `openai/gpt-4o` - OpenAI's latest through OpenRouter
+- `qwen/qwen-2.5-72b-instruct` - Multilingual specialist
 
 ### DeepSeek
 ```python
@@ -346,9 +371,17 @@ provider = get_provider("local",
 
 4. **Translate with AI**
    ```bash
+   # Using OpenAI
    game-translator translate \
      --project "rpg-game" \
      --provider openai \
+     --patterns "validation_patterns_template.xlsx"
+
+   # Using OpenRouter (access to 200+ models)
+   game-translator translate \
+     --project "rpg-game" \
+     --provider openrouter \
+     --model "google/gemini-2.5-flash" \
      --patterns "validation_patterns_template.xlsx"
    ```
 

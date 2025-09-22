@@ -29,11 +29,13 @@ def list_providers() -> list:
 from .mock_provider import MockTranslationProvider
 from .direct_openai import DirectOpenAIProvider
 from .direct_local import DirectLocalProvider
+from .openrouter import OpenRouterProvider
 
 # Register provider types
 register_provider("mock", MockTranslationProvider)
 register_provider("openai", DirectOpenAIProvider)
 register_provider("local", DirectLocalProvider)
+register_provider("openrouter", OpenRouterProvider)
 
 # Aliases for clarity
 register_provider("direct_openai", DirectOpenAIProvider)

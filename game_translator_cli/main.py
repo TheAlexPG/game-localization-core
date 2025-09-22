@@ -100,7 +100,7 @@ def init(name: str, source_lang: str, target_lang: str, source_format: str,
 
 @cli.command()
 @click.option('--project', '-p', required=True, help='Project name or path')
-@click.option('--provider', type=click.Choice(['openai', 'local', 'mock']),
+@click.option('--provider', type=click.Choice(['openai', 'local', 'openrouter', 'mock']),
               required=True, help='AI provider to use')
 @click.option('--model', help='Model name (provider-specific)')
 @click.option('--api-key', help='API key for provider (if required)')
@@ -149,6 +149,8 @@ def translate(project: str, provider: str, model: Optional[str], api_key: Option
     try:
         if provider == 'openai':
             ai_provider = get_provider('openai', api_key=api_key, model_name=model or 'gpt-4o-mini')
+        elif provider == 'openrouter':
+            ai_provider = get_provider('openrouter', api_key=api_key, model_name=model or 'google/gemini-2.5-flash')
         elif provider == 'local':
             kwargs = {'model_name': model or 'local-model'}
             if api_url:
@@ -701,7 +703,7 @@ def status(project: str):
 
 @cli.command()
 @click.option('--project', '-p', required=True, help='Project name or path')
-@click.option('--provider', type=click.Choice(['openai', 'local', 'mock']),
+@click.option('--provider', type=click.Choice(['openai', 'local', 'openrouter', 'mock']),
               required=True, help='AI provider to use')
 @click.option('--model', help='Model name (provider-specific)')
 @click.option('--api-key', help='API key for provider (if required)')
@@ -865,7 +867,7 @@ def extract_terms(project: str, provider: str, model: Optional[str], api_key: Op
 
 @cli.command()
 @click.option('--project', '-p', required=True, help='Project name or path')
-@click.option('--provider', type=click.Choice(['openai', 'local', 'mock']),
+@click.option('--provider', type=click.Choice(['openai', 'local', 'openrouter', 'mock']),
               required=True, help='AI provider to use')
 @click.option('--model', help='Model name (provider-specific)')
 @click.option('--api-key', help='API key for provider (if required)')
@@ -1037,7 +1039,7 @@ def translate_glossary(project: str, provider: str, model: Optional[str], api_ke
 
 @cli.command()
 @click.option('--project', '-p', required=True, help='Project name or path')
-@click.option('--provider', type=click.Choice(['openai', 'local', 'mock']),
+@click.option('--provider', type=click.Choice(['openai', 'local', 'openrouter', 'mock']),
               required=True, help='AI provider to use')
 @click.option('--model', help='Model name (provider-specific)')
 @click.option('--api-key', help='API key for provider (if required)')
