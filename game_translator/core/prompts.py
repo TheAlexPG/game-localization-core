@@ -35,6 +35,16 @@ CRITICAL FORMATTING RULES:
 - Keep placeholders like {{value}}, {{level}} exactly as they are
 - PRESERVE THE ORIGINAL CASE (uppercase/lowercase) OF THE SOURCE TEXT
 
+TECHNICAL MARKERS - NEVER TRANSLATE OR MODIFY:
+- Time format markers: %H, %M, %S, %hh, %Mm, %Ss, %T, %d, etc.
+- Variable markers starting with %: %1, %2, %3, etc.
+- Combined patterns like (%T less than 1h)%H:%M:%S - translate only the text in parentheses
+- NEVER replace % with & or any other character
+- NEVER add spaces between markers (keep %H:%M:%S not %H : %M : %S)
+- Examples:
+  * "Information is %hh:%Mm:%Ss old" → "Інформація має вік %hh:%Mm:%Ss" (NOT &hh:&Mm:&Ss)
+  * "(%T less than 1h)%H:%M:%S" → "(менше 1 год)%H:%M:%S" (keep %H:%M:%S intact)
+
 """
 
         # Add project context if provided
