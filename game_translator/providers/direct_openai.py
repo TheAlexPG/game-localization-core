@@ -1,10 +1,7 @@
-"""Direct OpenAI provider adapted from legacy version"""
+"""Direct OpenAI provider implementation"""
 
-import json
-import time
 import os
-from typing import List, Dict, Any, Optional
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from typing import Dict, Optional
 
 try:
     from openai import OpenAI
@@ -12,17 +9,24 @@ try:
 except ImportError:
     OPENAI_AVAILABLE = False
 
-from .base import BaseTranslationProvider
-from ..core.smart_glossary import SmartGlossaryMatcher, format_glossary_for_prompt
+from .llm_base import BaseLLMProvider
 
 
-class DirectOpenAIProvider(BaseTranslationProvider):
-    """Direct OpenAI provider based on legacy implementation"""
+class DirectOpenAIProvider(BaseLLMProvider):
+    """Direct OpenAI provider for translation using OpenAI API"""
 
     def __init__(self, api_key: str = None, model_name: str = "gpt-4o-mini",
                  temperature: float = 1.0, max_parallel: int = 3,
                  max_retries: int = 3, retry_delay: int = 2, **kwargs):
-        super().__init__(model_name, **kwargs)
+
+        super().__init__(
+            model_name=model_name,
+            temperature=temperature,
+            max_parallel=max_parallel,
+            max_retries=max_retries,
+            retry_delay=retry_delay,
+            **kwargs
+        )
 
         if not OPENAI_AVAILABLE:
             raise ImportError("OpenAI package not available. Install with: pip install openai")
@@ -32,111 +36,11 @@ class DirectOpenAIProvider(BaseTranslationProvider):
             raise ValueError("OpenAI API key is required")
 
         self.client = OpenAI(api_key=self.api_key)
-        self.temperature = temperature
-        self.max_parallel = max_parallel
-        self.max_retries = max_retries
-        self.retry_delay = retry_delay
-
-    def translate_texts(self, texts: List[str],
-                       source_lang: str, target_lang: str,
-                       glossary: Optional[Dict[str, str]] = None,
-                       context: Optional[str] = None,
-                       use_smart_glossary: bool = True) -> List[str]:
-        """Translate texts using OpenAI API with batching"""
-        if not texts:
-            return []
-
-        # Process in small batches for better results
-        batch_size = min(5, len(texts))
-        batches = [texts[i:i + batch_size] for i in range(0, len(texts), batch_size)]
-
-        all_translations = []
-
-        for batch in batches:
-            translations = self._translate_batch(batch, source_lang, target_lang, glossary, context, use_smart_glossary)
-            all_translations.extend(translations)
-
-        return all_translations
-
-    def _translate_batch(self, texts: List[str], source_lang: str, target_lang: str,
-                        glossary: Optional[Dict[str, str]] = None,
-                        context: Optional[str] = None,
-                        use_smart_glossary: bool = True) -> List[str]:
-        """Translate a single batch"""
-        prompt = self._create_translation_prompt(texts, source_lang, target_lang, glossary, context, use_smart_glossary)
-
-        for attempt in range(self.max_retries):
-            try:
-                response = self._make_api_call(prompt)
-                translations = self._parse_translation_response(response, len(texts))
-
-                # Ensure we have correct number of translations
-                while len(translations) < len(texts):
-                    translations.append(texts[len(translations)])
-
-                return translations[:len(texts)]
-
-            except Exception as e:
-                print(f"Translation attempt {attempt + 1} failed: {e}")
-                if attempt < self.max_retries - 1:
-                    time.sleep(self.retry_delay * (attempt + 1))
-                else:
-                    print(f"Batch translation failed after {self.max_retries} attempts")
-                    return texts  # Return original texts as fallback
-
-    def _create_translation_prompt(self, texts: List[str], source_lang: str, target_lang: str,
-                                 glossary: Optional[Dict[str, str]] = None,
-                                 context: Optional[str] = None,
-                                 use_smart_glossary: bool = True) -> str:
-        """Create translation prompt with smart glossary filtering"""
-        prompt = f"""Translate the following texts from {source_lang} to {target_lang}.
-Keep the translation natural and contextually appropriate for a video game.
-
-CRITICAL FORMATTING RULES:
-- Preserve ALL XML-like tags exactly: &lt;page=S&gt;, &lt;hpage&gt;, etc.
-- Keep ALL special characters and HTML entities as-is: &#8217;, &amp;, etc.
-- Do NOT change any formatting, tags, or special symbols
-- Only translate the actual text content, not the markup
-- Keep placeholders like {{value}}, {{level}} exactly as they are
-- PRESERVE THE ORIGINAL CASE (uppercase/lowercase) OF THE SOURCE TEXT
-
-"""
-
-        # Add project context if provided
-        if context:
-            # Context can be a simple string or formatted context from project
-            prompt += f"{context}\n\n"
-
-        # Smart glossary filtering
-        if glossary:
-            effective_glossary = glossary
-
-            if use_smart_glossary:
-                # Use SmartGlossaryMatcher to find only relevant terms
-                matcher = SmartGlossaryMatcher(glossary)
-                effective_glossary = matcher.find_batch_relevant_terms(texts)
-
-                # Smart Glossary is working silently
-
-            if effective_glossary:
-                formatted_glossary = format_glossary_for_prompt(effective_glossary)
-                if formatted_glossary:
-                    prompt += f"{formatted_glossary}\n\n"
-
-        prompt += "Translate each numbered line and provide ONLY the translation, preserving all formatting:\n\n"
-
-        for i, text in enumerate(texts, 1):
-            prompt += f"{i}. {text}\n"
-
-        prompt += "\nRespond with only the translations, one per line, in the same order:"
-
-        return prompt
 
     def _make_api_call(self, prompt: str, use_structured_output: bool = False,
-                     response_schema: Optional[Dict] = None) -> str:
-        """Make API call to OpenAI with optional structured output"""
+                      response_schema: Optional[Dict] = None) -> str:
+        """Make API call to OpenAI"""
 
-        # Use simpler message format like the old working version
         params = {
             "model": self.model_name,
             "messages": [
@@ -147,8 +51,7 @@ CRITICAL FORMATTING RULES:
             ],
             "temperature": self.temperature
         }
-        # Don't set max_tokens/max_completion_tokens - let API use defaults
-        # This was the key difference in the old working version
+        # Don't set max_tokens - let API use defaults
 
         # Add structured output if requested
         if use_structured_output and response_schema:
@@ -157,7 +60,7 @@ CRITICAL FORMATTING RULES:
                 "json_schema": response_schema
             }
 
-        # Make API call with retry logic from old version
+        # Make API call with retry logic
         for attempt in range(self.max_retries):
             try:
                 response = self.client.chat.completions.create(**params)
@@ -165,6 +68,7 @@ CRITICAL FORMATTING RULES:
             except Exception as e:
                 if attempt < self.max_retries - 1:
                     print(f"API call failed (attempt {attempt + 1}), retrying in {self.retry_delay}s: {e}")
+                    import time
                     time.sleep(self.retry_delay)
                 else:
                     raise e
@@ -174,137 +78,9 @@ CRITICAL FORMATTING RULES:
 
         return response.choices[0].message.content.strip()
 
-    def _parse_translation_response(self, response: str, expected_count: int) -> List[str]:
-        """Parse OpenAI response into list of translations"""
-        lines = response.strip().split('\n')
-        translations = []
-
-        for line in lines:
-            line = line.strip()
-            if not line:
-                continue
-
-            # Remove numbering if present (1. , 2. , etc.)
-            if line and line[0].isdigit() and '. ' in line:
-                line = line.split('. ', 1)[1] if '. ' in line else line
-
-            if line:
-                translations.append(line)
-
-        return translations
-
-    def extract_terms_structured(self, text: str, context: Optional[str] = None) -> List[str]:
-        """Extract terms using structured output for better reliability"""
-        prompt = f"""Analyze this game text and extract important terms that should be consistently translated.
-
-Look for:
-- Character names, location names, item names
-- Skill/ability names, unique game terminology
-- Proper nouns specific to the game world
-
-Do NOT include: common words, generic gaming terms, UI text, numbers
-
-Text to analyze:
-{text}
-
-"""
-
-        # Add glossary context if provided
-        if context:
-            prompt += f"{context}\n\n"
-        else:
-            prompt += "Context: Game localization\n\n"
-
-        prompt += "Return a JSON object with extracted terms."
-
-        schema = {
-            "name": "term_extraction",
-            "schema": {
-                "type": "object",
-                "properties": {
-                    "terms": {
-                        "type": "array",
-                        "items": {"type": "string"},
-                        "description": "List of important game-specific terms"
-                    }
-                },
-                "required": ["terms"]
-            }
-        }
-
-        try:
-            response = self._make_api_call(prompt, use_structured_output=True, response_schema=schema)
-            data = json.loads(response)
-            return data.get("terms", [])
-        except Exception as e:
-            print(f"Structured term extraction failed: {e}")
-            return []
-
-    def translate_glossary_structured(self, terms: List[str], source_lang: str, target_lang: str,
-                                    context: Optional[str] = None) -> Dict[str, str]:
-        """Translate glossary terms using structured output"""
-        if not terms:
-            return {}
-
-        # Map language codes to full names for better AI understanding
-        lang_mapping = {
-            'uk': 'Ukrainian',
-            'ru': 'Russian',
-            'de': 'German',
-            'fr': 'French',
-            'es': 'Spanish',
-            'it': 'Italian',
-            'pl': 'Polish',
-            'en': 'English'
-        }
-
-        source_lang_name = lang_mapping.get(source_lang, source_lang)
-        target_lang_name = lang_mapping.get(target_lang, target_lang)
-
-        prompt = f"""Translate these video game terms from {source_lang_name} to {target_lang_name}.
-Provide natural {target_lang_name} translations that fit in a fantasy/adventure game setting.
-
-"""
-
-        # Add glossary context if provided
-        if context:
-            prompt += f"{context}\n\n"
-
-        prompt += f"""Terms: {', '.join(terms)}
-
-Return a JSON object with translations."""
-
-        schema = {
-            "name": "glossary_translation",
-            "schema": {
-                "type": "object",
-                "properties": {
-                    "translations": {
-                        "type": "object",
-                        "additionalProperties": {"type": "string"},
-                        "description": "Dictionary mapping source terms to target translations"
-                    }
-                },
-                "required": ["translations"]
-            }
-        }
-
-        try:
-            response = self._make_api_call(prompt, use_structured_output=True, response_schema=schema)
-            data = json.loads(response)
-            return data.get("translations", {})
-        except Exception as e:
-            print(f"Structured glossary translation failed: {e}")
-            return {term: term for term in terms}  # Fallback
-
-    def validate_connection(self) -> bool:
-        """Test OpenAI connection"""
-        try:
-            test_response = self._make_api_call("Translate to Ukrainian: Hello")
-            return len(test_response) > 0
-        except Exception as e:
-            print(f"Connection validation failed: {e}")
-            return False
+    def _get_batch_size(self, total_texts: int) -> int:
+        """OpenAI works well with batches of 5"""
+        return min(5, total_texts)
 
     def get_info(self) -> Dict[str, str]:
         """Get provider information"""
