@@ -98,6 +98,7 @@ CRITICAL FORMATTING RULES:
 - Do NOT change any formatting, tags, or special symbols
 - Only translate the actual text content, not the markup
 - Keep placeholders like {{value}}, {{level}} exactly as they are
+- PRESERVE THE ORIGINAL CASE (uppercase/lowercase) OF THE SOURCE TEXT
 
 """
 

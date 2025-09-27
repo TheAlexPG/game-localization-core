@@ -53,7 +53,10 @@ class TranslationManager:
                 self.stats["skipped"] += 1
                 continue
 
-            if skip_technical and entry.is_technical():
+            if skip_technical and entry.should_skip_translation():
+                # Mark as translated with original text (no translation needed)
+                entry.translated_text = entry.source_text
+                entry.status = TranslationStatus.TRANSLATED
                 self.stats["skipped"] += 1
                 continue
 

@@ -87,6 +87,7 @@ IMPORTANT RULES:
 - Keep HTML entities and special characters exactly as they are
 - Only translate the actual text content, not markup or code
 - Be concise and natural
+- PRESERVE THE ORIGINAL CASE (uppercase/lowercase) OF THE SOURCE TEXT
 
 """
 
